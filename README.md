@@ -1,43 +1,47 @@
-# Mintlify Starter Kit
+# Tydli Documentation
 
-Use the starter kit to get your docs deployed and ready to customize.
+This repository contains the customer-facing documentation for Tydli, hosted on Mintlify.
 
-Click the green **Use this template** button at the top of this repo to copy the Mintlify starter kit. The starter kit contains examples with
+## 🔄 Automated Sync
 
-- Guide pages
-- Navigation
-- Customizations
-- API reference pages
-- Use of popular components
+Documentation is automatically synced from the [main Tydli repository](https://github.com/MaxWillEj/tydliio). Do not edit documentation files directly in this repository - they will be overwritten.
 
-**[Follow the full quickstart guide](https://starter.mintlify.com/quickstart)**
+## 📝 Content Updates
 
-## Development
+To update documentation:
+1. Make changes in the `MaxWillEj/tydliio` repository
+2. Push changes to the `main` branch
+3. GitHub Actions will automatically create a PR in this repository
+4. Review and merge the PR
 
-Install the [Mintlify CLI](https://www.npmjs.com/package/mint) to preview your documentation changes locally. To install, use the following command:
+## 🚀 Local Development
 
+```bash
+# Install Mintlify CLI
+npm install -g mintlify
+
+# Preview documentation locally
+mintlify dev
+
+# Check for broken links
+mintlify broken-links
 ```
-npm i -g mint
-```
 
-Run the following command at the root of your documentation, where your `docs.json` is located:
+## 📚 Documentation Structure
 
-```
-mint dev
-```
+- `/guides` - User guides and tutorials
+- `/support` - Troubleshooting and FAQ
+- `/api-reference` - API and technical reference
+- `/developers` - Developer documentation
+- `/operations` - Operations and security
+- `/resources` - Changelog and resources
 
-View your local preview at `http://localhost:3000`.
+## 🔗 Links
 
-## Publishing changes
+- **Live Docs**: https://docs.tydli.io (or your Mintlify URL)
+- **Main Repo**: https://github.com/MaxWillEj/tydliio
+- **Dashboard**: https://tydli.io
 
-Install our GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app) to propagate changes from your repo to your deployment. Changes are deployed to production automatically after pushing to the default branch.
+## 📄 License
 
-## Need help?
-
-### Troubleshooting
-
-- If your dev environment isn't running: Run `mint update` to ensure you have the most recent version of the CLI.
-- If a page loads as a 404: Make sure you are running in a folder with a valid `docs.json`.
-
-### Resources
-- [Mintlify documentation](https://mintlify.com/docs)
+Same as main Tydli repository.

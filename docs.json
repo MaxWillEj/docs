@@ -1,122 +1,152 @@
 {
-  "$schema": "https://mintlify.com/docs.json",
-  "theme": "mint",
-  "name": "Mint Starter Kit",
-  "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+  "$schema": "https://mintlify.com/schema.json",
+  "name": "Tydli",
+  "logo": {
+    "dark": "/logo/dark.svg",
+    "light": "/logo/light.svg",
+    "href": "https://tydli.io"
   },
   "favicon": "/favicon.svg",
-  "navigation": {
-    "tabs": [
-      {
-        "tab": "Guides",
-        "groups": [
-          {
-            "group": "Getting started",
-            "pages": [
-              "index",
-              "quickstart",
-              "development"
-            ]
-          },
-          {
-            "group": "Customization",
-            "pages": [
-              "essentials/settings",
-              "essentials/navigation"
-            ]
-          },
-          {
-            "group": "Writing content",
-            "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/reusable-snippets"
-            ]
-          },
-          {
-            "group": "AI tools",
-            "pages": [
-              "ai-tools/cursor",
-              "ai-tools/claude-code",
-              "ai-tools/windsurf"
-            ]
-          }
-        ]
-      },
-      {
-        "tab": "API reference",
-        "groups": [
-          {
-            "group": "API documentation",
-            "pages": [
-              "api-reference/introduction"
-            ]
-          },
-          {
-            "group": "Endpoint examples",
-            "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
-            ]
-          }
-        ]
-      }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
-        },
-        {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
-        }
+  "colors": {
+    "primary": "#3B82F6",
+    "light": "#60A5FA",
+    "dark": "#1E40AF",
+    "background": {
+      "dark": "#0F172A",
+      "light": "#FFFFFF"
+    },
+    "anchors": {
+      "from": "#3B82F6",
+      "to": "#8B5CF6"
+    }
+  },
+  "topbar": {
+    "style": "default"
+  },
+  "topbarLinks": [
+    {
+      "name": "Dashboard",
+      "url": "https://tydli.io"
+    },
+    {
+      "name": "GitHub",
+      "url": "https://github.com/MaxWillEj/tydliio"
+    }
+  ],
+  "topbarCtaButton": {
+    "type": "github",
+    "url": "https://github.com/MaxWillEj/tydliio"
+  },
+  "primaryTab": {
+    "name": "Documentation"
+  },
+  "tabs": [
+    {
+      "name": "API Reference",
+      "url": "api-reference"
+    },
+    {
+      "name": "Developers",
+      "url": "developers"
+    },
+    {
+      "name": "Resources",
+      "url": "resources"
+    }
+  ],
+  "navigation": [
+    {
+      "group": "Getting Started",
+      "pages": [
+        "introduction",
+        "guides/user-guide"
+      ]
+    },
+    {
+      "group": "Guides",
+      "pages": [
+        "guides/oauth-integration"
+      ]
+    },
+    {
+      "group": "Support",
+      "pages": [
+        "support/troubleshooting",
+        "support/faq"
+      ]
+    },
+    {
+      "group": "API Overview",
+      "pages": [
+        "api-reference/overview",
+        "api-reference/rate-limits"
+      ]
+    },
+    {
+      "group": "Technical Reference",
+      "pages": [
+        "api-reference/database-schema",
+        "api-reference/mcp-compliance"
+      ]
+    },
+    {
+      "group": "Development",
+      "pages": [
+        "developers/architecture",
+        "developers/developer-guide"
+      ]
+    },
+    {
+      "group": "Operations",
+      "pages": [
+        "operations/security",
+        "operations/monitoring"
+      ]
+    },
+    {
+      "group": "Updates",
+      "pages": [
+        "resources/changelog"
       ]
     }
+  ],
+  "footerSocials": {
+    "github": "https://github.com/MaxWillEj/tydliio",
+    "website": "https://tydli.io"
   },
-  "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
+  "feedback": {
+    "thumbsRating": true,
+    "suggestEdit": true,
+    "raiseIssue": true
   },
-  "navbar": {
-    "links": [
-      {
-        "label": "Support",
-        "href": "mailto:hi@mintlify.com"
-      }
-    ],
-    "primary": {
-      "type": "button",
-      "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
+  "search": {
+    "prompt": "Search Tydli docs..."
+  },
+  "analytics": {
+    "posthog": {
+      "apiKey": "phc_your_posthog_key_here"
     }
   },
-  "contextual": {
-    "options": [
-     "copy",
-     "view",
-     "chatgpt",
-     "claude",
-     "perplexity",
-     "mcp",
-     "cursor",
-     "vscode"
-   ]
+  "metadata": {
+    "og:site_name": "Tydli Documentation",
+    "og:type": "website",
+    "og:image": "https://tydli.io/og-image.png",
+    "twitter:card": "summary_large_image",
+    "twitter:site": "@tydli"
   },
-  "footer": {
-    "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
+  "redirects": [
+    {
+      "source": "/docs/:path*",
+      "destination": "/:path*"
+    }
+  ],
+  "api": {
+    "baseUrl": "https://nqfciqtsrcjorlqcglmq.supabase.co/functions/v1",
+    "auth": {
+      "method": "bearer"
+    },
+    "playground": {
+      "mode": "simple"
     }
   }
 }

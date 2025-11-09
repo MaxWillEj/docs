@@ -1,0 +1,17 @@
+name: Deploy to Mintlify
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy to Mintlify
+        run: |
+          echo "Mintlify auto-deploys from GitHub"
+          echo "No manual deployment needed"
