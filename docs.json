@@ -1,116 +1,142 @@
 {
- "$schema": "https://mintlify.com/docs.json",
+  "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
   "name": "Tydli",
+  "description": "Deploy your API docs as AI tools — instantly connect Claude, ChatGPT, and Cursor to your documentation with MCP compliance",
   "logo": {
     "dark": "/logo/dark.svg",
-    "light": "/logo/light.svg"
+    "light": "/logo/light.svg",
+    "href": "https://tydli.io"
   },
   "favicon": "/favicon.svg",
   "colors": {
     "primary": "#3B82F6",
     "light": "#60A5FA",
-    "dark": "#1E40AF",
-    "anchors": {
-      "from": "#3B82F6",
-      "to": "#1E40AF"
+    "dark": "#1E40AF"
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "Dashboard",
+        "href": "https://tydli.io"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Get Started",
+      "href": "https://tydli.io"
     }
   },
-  "topbarLinks": [
+  "primaryTab": {
+    "name": "Documentation"
+  },
+  "tabs": [
     {
-      "name": "Dashboard",
-      "url": "https://tydli.io"
+      "name": "API Reference",
+      "url": "api-reference"
+    },
+    {
+      "name": "Developers",
+      "url": "developers"
+    },
+    {
+      "name": "Resources",
+      "url": "resources"
     }
   ],
-  "topbarCtaButton": {
-    "name": "Get Started",
-    "url": "https://tydli.io"
-  },
   "navigation": {
-    "tabs": [
+    "groups": [
       {
-        "tab": "Documentation",
-        "groups": [
-          {
-            "group": "Getting Started",
-            "pages": [
-              "introduction",
-              "guides/user-guide"
-            ]
-          },
-          {
-            "group": "Guides",
-            "pages": [
-              "guides/oauth-integration"
-            ]
-          },
-          {
-            "group": "Support",
-            "pages": [
-              "support/troubleshooting",
-              "support/faq"
-            ]
-          }
+        "group": "Getting Started",
+        "pages": [
+          "introduction",
+          "guides/user-guide"
         ]
       },
       {
-        "tab": "API Reference",
-        "groups": [
-          {
-            "group": "Overview",
-            "pages": [
-              "api-reference/overview",
-              "api-reference/rate-limits"
-            ]
-          },
-          {
-            "group": "Technical Reference",
-            "pages": [
-              "api-reference/database-schema",
-              "api-reference/mcp-compliance"
-            ]
-          }
+        "group": "Guides",
+        "pages": [
+          "guides/oauth-integration"
         ]
       },
       {
-        "tab": "Developers",
-        "groups": [
-          {
-            "group": "Development",
-            "pages": [
-              "developers/architecture",
-              "developers/developer-guide"
-            ]
-          },
-          {
-            "group": "Operations",
-            "pages": [
-              "operations/security",
-              "operations/monitoring"
-            ]
-          }
+        "group": "Support",
+        "pages": [
+          "support/troubleshooting",
+          "support/faq"
         ]
       },
       {
-        "tab": "Resources",
-        "groups": [
-          {
-            "group": "Updates",
-            "pages": [
-              "changelog"
-            ]
-          }
+        "group": "API Overview",
+        "pages": [
+          "api-reference/overview",
+          "api-reference/rate-limits"
+        ]
+      },
+      {
+        "group": "Technical Reference",
+        "pages": [
+          "api-reference/database-schema",
+          "api-reference/mcp-compliance"
+        ]
+      },
+      {
+        "group": "Development",
+        "pages": [
+          "developers/architecture",
+          "developers/developer-guide"
+        ]
+      },
+      {
+        "group": "Operations",
+        "pages": [
+          "operations/security",
+          "operations/monitoring"
+        ]
+      },
+      {
+        "group": "Updates",
+        "pages": [
+          "resources/changelog"
         ]
       }
     ]
   },
-  "footerSocials": {
-    "github": "https://github.com/MaxWillEj/tydliio",
-    "website": "https://tydli.io"
+  "footer": {
+    "socials": {
+      "website": "https://tydli.io"
+    }
   },
-  "analytics": {
-    "posthog": {
-      "apiKey": "phc_placeholder"
+  "search": {
+    "prompt": "Search Tydli docs..."
+  },
+  "seo": {
+    "indexing": "navigable",
+    "metatags": {
+      "og:site_name": "Tydli Documentation",
+      "og:type": "website",
+      "og:image": "https://tydli.io/og-image.png"
+    }
+  },
+  "contextual": {
+    "options": [
+      "copy",
+      "view",
+      "chatgpt",
+      "claude",
+      "mcp"
+    ]
+  },
+  "redirects": [
+    {
+      "source": "/docs/:path*",
+      "destination": "/:path*"
+    }
+  ],
+  "api": {
+    "baseUrl": "https://nqfciqtsrcjorlqcglmq.supabase.co/functions/v1",
+    "playground": {
+      "display": "interactive"
     }
   }
 }
