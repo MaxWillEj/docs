@@ -1,76 +1,205 @@
 ---
-title: "Welcome to Tydli"
-description: "Deploy your API docs as AI tools — instantly"
-icon: "rocket"
+title: Welcome to Tydli
+description: Deploy your API docs as AI tools — instantly
+icon: rocket
 ---
+# Tydli - Deploy your API docs as AI tools — instantly
 
-# Welcome to Tydli Documentation
+**Tydli** converts Swagger/OpenAPI specifications into MCP (Model Context Protocol) 2025-03-26 compliant servers, enabling AI agents like Claude to interact with your APIs securely.
 
-Tydli converts OpenAPI specifications into MCP (Model Context Protocol) servers, enabling AI agents like Claude to interact with your APIs seamlessly.
+## 🎯 Key Features
 
-<Note>
-This documentation is automatically synced from the main Tydli repository. All content updates happen automatically when changes are pushed to the source repository.
-</Note>
+✅ **MCP 2025-03-26 Compliant** - Full protocol implementation with metadata discovery  
+✅ **OAuth 2.1 + PKCE** - Secure authentication for AI agents (S256 required)  
+✅ **Email Verification** - Account security with email confirmation  
+✅ **Claude Desktop Ready** - Zero-config integration  
+✅ **AI Document Processing** - Convert PDFs/DOCX to OpenAPI specs using Gemini  
+✅ **One-Click Deployment** - From spec to live MCP server in <60 seconds  
+✅ **Auto-Discovery** - `/.well-known/mcp-server` metadata endpoint  
+✅ **Encrypted Credentials** - AES-256 server-side encryption
 
-## Quick Links
+## How It Works
 
-<CardGroup cols={2}>
-  <Card title="User Guide" icon="book-open" href="/guides/user-guide">
-    Complete guide to using Tydli
-  </Card>
-  <Card title="OAuth Integration" icon="shield-check" href="/guides/oauth-integration">
-    Connect Claude Desktop with OAuth 2.1
-  </Card>
-  <Card title="API Reference" icon="code" href="/api-reference/overview">
-    Complete Edge Functions documentation
-  </Card>
-  <Card title="Troubleshooting" icon="wrench" href="/support/troubleshooting">
-    Common issues and solutions
-  </Card>
-</CardGroup>
+1. **Upload API Specs** - Upload/paste/URL or AI-process documents (PDF, DOCX, etc.)
+2. **Validate** - Automatic OpenAPI 3.0+ validation with auth detection  
+3. **Configure** - Set API credentials and MCP authentication method
+4. **Deploy** - Generate MCP server registered in `mcp_server_registry`
+5. **Connect** - Use OAuth or JWT to connect AI agents
 
-## What is Tydli?
+## Technical Stack
 
-Tydli is a platform that:
+### Frontend
+- React 18 + TypeScript 5
+- Tailwind CSS with custom design system
+- shadcn-ui components
+- React Router 6
+- React Query for state management
+- React Dropzone for file uploads
 
-- ✅ **Converts OpenAPI specs** into MCP-compliant servers
-- ✅ **Supports OAuth 2.1** with PKCE for secure authentication
-- ✅ **Works with Claude Desktop** and other AI agents
-- ✅ **Deploys in under 60 seconds** from spec to live server
-- ✅ **Encrypts credentials** with AES-256 encryption
+### Backend (Supabase)
+- PostgreSQL 15+ with Row Level Security (20 tables)
+- Edge Functions (Deno runtime, 14 functions)
+- Supabase Auth with email verification
+- Storage (api-specs bucket)
+- Resend for transactional emails
+- PostHog for analytics
+- Google Gemini for AI document processing
 
-## Key Features
+## Quick Start
 
-<AccordionGroup>
-  <Accordion title="MCP Protocol 2025-03-26 Compliant">
-    Full implementation with metadata discovery, tools, resources, and authentication
-  </Accordion>
-  <Accordion title="OAuth 2.1 + PKCE Authentication">
-    Secure authentication for AI agents with S256 code challenge
-  </Accordion>
-  <Accordion title="Claude Desktop Ready">
-    Zero-config integration with Claude Desktop and Claude.ai
-  </Accordion>
-  <Accordion title="AI Document Processing">
-    Convert PDFs and DOCX to OpenAPI specs using Gemini AI
-  </Accordion>
-</AccordionGroup>
-
-## Getting Started
+### For Users
 
 1. **Sign Up** at [tydli.io](https://tydli.io)
-2. **Upload your OpenAPI specification**
-3. **Configure authentication** (if needed)
-4. **Deploy your MCP server**
-5. **Connect with Claude Desktop**
+2. **Verify Email** - Check inbox and click verification link
+3. **Upload API Spec** - Upload OpenAPI file or AI-process documentation
+4. **Deploy** - Click "Generate MCP Server"
+5. **Connect** - Use OAuth or JWT in Claude Desktop
 
-<Info>
-Documentation content will be populated automatically via the sync system. This page serves as a placeholder until the first sync completes.
-</Info>
+### For Developers
 
-## Need Help?
+```bash
+# Clone repository
+git clone https://github.com/your-repo/tydli.git
+cd tydli
 
-- 📚 Browse the [User Guide](/guides/user-guide)
-- ❓ Check the [FAQ](/support/faq)
-- 🔧 See [Troubleshooting](/support/troubleshooting)
-- 💬 Open an issue on [GitHub](https://github.com/MaxWillEj/tydliio/issues)
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+```
+
+## MCP Server Authentication
+
+All deployed MCP servers support OAuth 2.1 with PKCE or JWT Bearer authentication.
+
+### OAuth 2.1 Setup (Recommended)
+
+**IMPORTANT:** Remote MCP servers with OAuth must be configured via **Settings > Connectors** in Claude Desktop or Claude.ai, not configuration files.
+
+#### For Claude Desktop:
+
+1. Open Claude Desktop → **Settings → Connectors**
+2. Click **"Add custom connector"**
+3. Enter the following:
+   - **Name**: `Tydli - [your-deployment-slug]`
+   - **MCP Server URL**: `https://nqfciqtsrcjorlqcglmq.supabase.co/functions/v1/mcp-router/[your-slug]`
+   - **OAuth Client ID**: (from your deployment dashboard)
+   - **Authorization URL**: `https://nqfciqtsrcjorlqcglmq.supabase.co/functions/v1/mcp-oauth-server/authorize`
+   - **Token URL**: `https://nqfciqtsrcjorlqcglmq.supabase.co/functions/v1/mcp-oauth-server/token`
+4. Click **Connect** - your browser will open for authorization
+
+#### For Claude.ai (Web):
+
+1. Go to https://claude.ai/settings/connectors
+2. Click **"Add custom connector"**
+3. Enter the same information as above
+4. Click **Connect**
+
+**Note:** This uses OAuth 2.1 with PKCE (Proof Key for Code Exchange). No client secret is required for public clients.
+
+### JWT Bearer Token (Alternative)
+
+For direct API access without OAuth flow, use JWT bearer tokens configured via your deployment dashboard. The MCP server will validate the JWT on each request.
+All deployed MCP servers support OAuth 2.1 and JWT Bearer Token authentication.
+
+### OAuth 2.1 (Recommended)
+
+**🎯 Easiest Setup - No Config Files Required!**
+
+1. **Register OAuth Client** in your Tydli deployment dashboard
+2. **Configure Claude Desktop** via **Settings → Connectors → Add Custom Connector**
+3. Enter the following details (all provided in your dashboard):
+   - **Name:** `Tydli - your-deployment-name`
+   - **Server URL:** `https://nqfciqtsrcjorlqcglmq.supabase.co/functions/v1/mcp-router/your-slug`
+   - **Client ID:** `mcp_xxxxx` (from dashboard)
+   - **Authorization URL:** `https://nqfciqtsrcjorlqcglmq.supabase.co/functions/v1/mcp-oauth-server/authorize`
+   - **Token URL:** `https://nqfciqtsrcjorlqcglmq.supabase.co/functions/v1/mcp-oauth-server/token`
+   - **Scopes:** `openid email`
+
+4. Click **Connect** and authorize in your browser
+5. Done! Claude can now use your MCP server tools
+
+**For Claude.ai (Web):**
+- Go to **Settings → Connectors** in Claude.ai
+- Add custom connector with the same details above
+
+**Security Note:** This uses OAuth 2.1 with PKCE - no client secret required!
+
+### JWT Bearer Token
+
+For programmatic access or custom integrations:
+
+```json
+{
+  "mcpServers": {
+    "my-api": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-fetch"],
+      "env": {
+        "FETCH_BASE_URL": "https://nqfciqtsrcjorlqcglmq.supabase.co/functions/v1/mcp-router/your-slug",
+        "FETCH_API_KEY": "Bearer your-jwt-token"
+      }
+    }
+  }
+}
+```
+
+Get your JWT token from: **Dashboard → Deployment → Authentication → Generate JWT Token**
+
+## Documentation
+
+**📚 [Complete Documentation Index](/docs-index)** - Find all documentation organized by audience and topic
+
+**Quick Links:**
+- [User Guide](/user/user_guide) - Complete usage instructions
+- [OAuth Integration Guide](/user/oauth_integration_guide) - OAuth 2.1 setup
+- [API Reference](/api/api_reference) - Edge function documentation
+- [Developer Guide](/developer/developer_guide) - Development setup
+- [Architecture](/developer/architecture) - Technical architecture
+- [Troubleshooting](/user/troubleshooting) - Common issues
+
+## Production Status ✅
+
+**Current Version**: 1.0.0  
+**Status**: Production Ready  
+**Deployment**: https://tydli.io
+
+**Core Features**:
+- ✅ Email verification for new accounts
+- ✅ OAuth 2.1 authorization server with PKCE
+- ✅ JWT authentication for direct access
+- ✅ AI document-to-OpenAPI conversion (5/day limit)
+- ✅ Three-layer authentication (email, MCP, API)
+- ✅ AES-256 credential encryption
+- ✅ Rate limiting (250/hour, 1500/month on free plan)
+- ✅ Real-time deployment monitoring
+- ✅ Mobile-responsive UI
+
+## Project Structure
+
+```
+tydli/
+├── src/
+│   ├── components/           # React components
+│   ├── pages/                # Route pages
+│   ├── hooks/                # Custom hooks
+│   └── integrations/         # Supabase client
+├── supabase/
+│   ├── functions/            # 14 edge functions
+│   ├── migrations/           # Database migrations
+│   └── config.toml           # Function configuration
+└── docs/                     # Documentation
+```
+
+## Contributing
+
+Built on [Lovable.dev](https://lovable.dev) - Full-stack web application platform.
+
+---
+
+**Tydli** - Making APIs AI-accessible, instantly. 🚀
+
+**Production URL**: https://tydli.io  
+**Project ID**: nqfciqtsrcjorlqcglmq
+ 

@@ -1,9 +1,288 @@
 ---
-title: "FAQ"
-description: "Frequently asked questions"
-icon: "circle-question"
+title: FAQ
+description: Frequently asked questions
+icon: circle-question
 ---
+# Frequently Asked Questions (FAQ)
 
-# FAQ
+## General
 
-This page will be populated automatically via the documentation sync system.
+### What is Tydli?
+
+Tydli is a platform that converts OpenAPI specifications into MCP (Model Context Protocol) servers that AI agents can consume. It enables AI assistants like Claude to interact with your APIs seamlessly.
+
+### What is MCP?
+
+The Model Context Protocol (MCP) is an open standard that enables AI systems to communicate with external data sources and APIs. It provides a standardized way for AI applications to discover and interact with tools and services.
+
+### Do I need coding experience to use Tydli?
+
+No! Tydli is designed as a no-code platform. If you have an OpenAPI specification for your API, you can generate an MCP server without writing any code.
+
+### What format should my API documentation be in?
+
+Tydli accepts OpenAPI 3.0+ specifications in either JSON or YAML format. You can upload a file, paste the content, or provide a URL to your specification.
+
+## Account & Authentication
+
+### Why do I need to verify my email?
+
+Email verification is required for account security. It ensures that only legitimate users can create and deploy MCP servers on the platform.
+
+### I didn't receive the verification email. What should I do?
+
+1. Check your spam/junk folder
+2. Wait a few minutes - emails can take time to arrive
+3. Try signing up again with the same email to resend the verification
+4. Contact support if the issue persists
+
+### Can I change my email address?
+
+Currently, email changes are not supported through the UI. Contact support for assistance with account changes.
+
+### What's the difference between OAuth and JWT authentication?
+
+- **OAuth 2.1 with PKCE** (Recommended): Best for AI agents like Claude Desktop. Provides secure user consent flow, automatic token refresh, and standardized MCP client integration.
+- **JWT** (Session-based): Direct authentication using your Supabase session token. Good for testing, custom integrations, and API development. Tokens are tied to your login session.
+- **None** (Public): No authentication required - the MCP server is publicly accessible. Usage is still tracked to your account for rate limiting.
+
+## Deployments
+
+### How long does it take to generate an MCP server?
+
+Typically 20-40 seconds from upload to live deployment, including:
+- Validation: 2-5 seconds
+- Code generation: 10-20 seconds
+- Deployment: 5-15 seconds
+
+### Why is my deployment stuck in "Generating" status?
+
+Check the deployment logs for error details. Common causes:
+- Invalid OpenAPI specification
+- Network connectivity issues
+- Rate limit exceeded
+- Large specification taking longer than usual
+
+If it remains stuck for more than 2 minutes, try stopping and restarting the deployment.
+
+### Can I update an existing deployment?
+
+Currently, deployments are immutable after creation. To make changes:
+1. Upload your updated OpenAPI specification
+2. Generate a new deployment
+3. Update your AI agent configuration with the new URL
+4. Delete the old deployment if no longer needed
+
+### How many deployments can I create?
+
+Limits depend on your plan:
+- **Free tier**: See your dashboard for current limits
+- **Paid plans**: Higher limits and custom quotas available
+
+Check your current usage in the dashboard header.
+
+### Can I make my MCP server public?
+
+Yes! When generating a deployment, select "None" as the authentication method. The server will be publicly accessible, with usage tracked to your account.
+
+## API Specifications
+
+### My OpenAPI spec has authentication. How do I configure it?
+
+After uploading your spec:
+1. Tydli automatically detects authentication requirements
+2. Configure credentials in the authentication section
+3. Credentials are encrypted with AES-256 before storage
+4. The MCP server automatically includes credentials in API calls
+
+### Does Tydli support Swagger 2.0?
+
+No, only OpenAPI 3.0+ is supported. You can convert Swagger 2.0 to OpenAPI 3.0 using tools like [swagger2openapi](https://github.com/Mermade/oas-kit/tree/main/packages/swagger2openapi).
+
+### What if my API doesn't have an OpenAPI spec?
+
+You have two options:
+1. **AI Document Processor**: Upload API documentation (PDF, Word, etc.) and Tydli will generate an OpenAPI spec using AI
+2. **Manual creation**: Use tools like [Swagger Editor](https://editor.swagger.io/) to create an OpenAPI spec from scratch
+
+### Can I upload multiple API specs?
+
+Yes! You can create separate deployments for each API. Each deployment gets its own unique URL and authentication configuration.
+
+## Claude Desktop Integration
+
+### Where do I find the Claude Desktop configuration file?
+
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+
+If the file doesn't exist, create it with an empty JSON object: `{}`
+
+### Do I need to restart Claude after updating the configuration?
+
+Yes, always restart Claude Desktop after modifying `claude_desktop_config.json` for changes to take effect.
+
+### Claude isn't detecting my MCP server. What should I do?
+
+1. Verify the configuration syntax is valid JSON
+2. Check that all URLs are correct (copy from dashboard)
+3. Ensure your deployment status is "Ready"
+4. Restart Claude Desktop completely
+5. Check Claude Desktop logs for error messages
+
+### How do I remove an MCP server from Claude?
+
+1. Open `claude_desktop_config.json`
+2. Delete the server entry from the `mcpServers` object
+3. Save the file
+4. Restart Claude Desktop
+
+## Rate Limits & Usage
+
+### What are the rate limits?
+
+Rate limits vary by plan. Check your dashboard for current limits:
+- Requests per hour
+- Requests per month
+- Deployments limit
+- AI processing usage
+
+### What happens if I exceed my rate limit?
+
+You'll receive a `429 Too Many Requests` error. The response includes:
+- Current usage
+- Limit details
+- Time until reset (`Retry-After` header)
+
+Upgrade your plan for higher limits.
+
+### How is usage tracked?
+
+All MCP server requests are logged and counted toward your usage quota, including:
+- Successful requests
+- Failed requests (still consume quota)
+- Requests from any authenticated client
+
+### Can I see my usage history?
+
+Yes! View detailed usage analytics in your dashboard, including:
+- Requests per deployment
+- Response times
+- Error rates
+- Tool invocation logs
+
+## Security & Privacy
+
+### How are my API credentials stored?
+
+Credentials are encrypted using AES-256 encryption before storage. They are only decrypted server-side when making API calls - never sent to the client.
+
+### Who can access my MCP servers?
+
+Access depends on authentication method:
+- **OAuth**: Only clients you explicitly authorize
+- **JWT**: Anyone with your JWT token (keep it secret!)
+- **None**: Publicly accessible to anyone
+
+### Can I revoke access to an AI agent?
+
+For OAuth authentication:
+1. Go to your deployment settings
+2. View active OAuth tokens
+3. Revoke specific tokens
+
+For JWT authentication, log out to invalidate all tokens.
+
+### What data does Tydli collect?
+
+Tydli collects:
+- Account information (email, profile)
+- API specifications (stored encrypted)
+- Usage analytics (requests, errors, response times)
+- Security events (login attempts, rate limits)
+
+We do not collect or store:
+- Actual API responses from your endpoints
+- Personal data from your APIs
+- API credentials in plaintext
+
+## Troubleshooting
+
+### My MCP server returns 401 Unauthorized
+
+Common causes:
+1. **OAuth**: Token expired or not yet authorized
+2. **JWT**: Invalid or expired session token
+3. **API Credentials**: Incorrect credentials configured
+4. **Deployment stopped**: Restart the deployment
+
+Check deployment logs for specific error details.
+
+### API calls are failing with "Tool execution failed"
+
+This typically means the target API returned an error. Check:
+1. API credentials are correct
+2. API endpoint URLs are valid
+3. Required parameters are provided
+4. API is reachable and operational
+5. Deployment logs for the actual API response
+
+### How do I debug MCP server issues?
+
+1. **View Logs**: Click "View Logs" in deployment card
+2. **Health Check**: Click "Health Check" to test connectivity
+3. **Test with cURL**: Copy the cURL command and test directly
+4. **Check API Status**: Verify your target API is operational
+5. **Review OpenAPI Spec**: Ensure endpoints are correctly defined
+
+## Billing & Plans
+
+### Is there a free tier?
+
+Yes! The free tier includes limited deployments and monthly requests. Check the dashboard for your current limits.
+
+### How do I upgrade my plan?
+
+Visit the Billing page in your dashboard to view available plans and upgrade options.
+
+### Can I downgrade my plan?
+
+Yes, but existing deployments and usage beyond the new plan's limits will be restricted. Contact support for assistance.
+
+### Do unused requests roll over?
+
+No, request quotas reset monthly and do not accumulate.
+
+## Support
+
+### How do I get help?
+
+1. **Documentation**: Check [User Guide](./USER_GUIDE.md), [Troubleshooting](./TROUBLESHOOTING.md)
+2. **Dashboard Logs**: View deployment logs for error details
+3. **Contact Support**: Use the contact form in the application
+4. **GitHub Issues**: Report bugs on the project repository
+
+### How do I report a bug?
+
+Include the following information:
+1. Description of the issue
+2. Steps to reproduce
+3. Expected vs actual behavior
+4. Deployment ID or request ID (from logs)
+5. Screenshots if applicable
+
+### Can I request a feature?
+
+Yes! Submit feature requests through the contact form or GitHub repository. Include:
+- Use case description
+- Why it's important to you
+- Expected behavior
+
+### Where can I learn more about MCP?
+
+Official resources:
+- [MCP Specification](https://modelcontextprotocol.io)
+- [MCP Documentation](https://modelcontextprotocol.io/docs)
+- [Reference Servers](https://context7.com/modelcontextprotocol/servers)
+- [Claude Custom Connectors](https://support.claude.com/en/articles/11503834)
+ 
