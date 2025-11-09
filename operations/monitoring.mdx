@@ -1,9 +1,529 @@
 ---
-title: "Monitoring"
-description: "Production monitoring and alerting"
-icon: "chart-line"
+title: Monitoring
+description: Production monitoring and alerting
+icon: chart-line
 ---
+# Deployment Monitoring & Health
 
-# Monitoring
+This guide covers monitoring, debugging, and maintaining healthy MCP server deployments on the Tydli platform.
 
-This page will be populated automatically via the documentation sync system.
+## Health Monitoring
+
+### Deployment Status
+
+Every deployment has a lifecycle status:
+
+| Status | Description | Action Required |
+|--------|-------------|-----------------|
+| `generating` | Server is being created | Wait (typically 10-20s) |
+| `deploying` | Server is being registered | Wait (typically 5-15s) |
+| `ready` | Server is live and accepting requests | None |
+| `stopped` | Server is inactive but preserved | Start to resume |
+| `error` | Generation or runtime error occurred | Check logs, fix issue |
+| `archived` | Deployment marked for deletion | None |
+
+### Health Check Endpoint
+
+Every deployment includes a built-in health check:
+
+**Endpoint**: `GET /health`  
+**Authentication**: Not required
+
+**Response**:
+```json
+{
+  "status": "healthy",
+  "timestamp": "2025-01-04T12:00:00.000Z",
+  "deployment_id": "abc-123-def",
+  "version": "1.0.0"
+}
+```
+
+**Status Values**:
+- `healthy` - Server is operational
+- `degraded` - Server responding but with issues
+- `unhealthy` - Server not responding properly
+
+**Testing Health**:
+```bash
+curl https://your-deployment-url/health
+```
+
+### Dashboard Health Check
+
+Use the "Health Check" button in the deployment card to:
+1. Test server connectivity
+2. Measure response time
+3. Verify authentication setup
+4. Check endpoint availability
+
+**Results Display**:
+- ✅ **Healthy**: Green indicator, shows response time
+- ⚠️ **Degraded**: Yellow indicator, shows warnings
+- ❌ **Error**: Red indicator, shows error message
+
+## Deployment Logs
+
+### Accessing Logs
+
+**Via Dashboard**:
+1. Navigate to your deployment
+2. Click "View Logs" button
+3. Logs update automatically every 5 seconds
+4. Newest entries appear at top
+
+**Log Levels**:
+- 🔵 **info** - Normal operations
+- 🟡 **warn** - Warnings (not critical)
+- 🟠 **debug** - Detailed diagnostic information
+- 🔴 **error** - Errors requiring attention
+
+### Log Structure
+
+Each log entry includes:
+```json
+{
+  "id": "log-uuid",
+  "level": "info",
+  "message": "MCP server started successfully",
+  "operation": "start",
+  "status": "success",
+  "metadata": {
+    "endpoint_count": 15,
+    "auth_method": "oauth"
+  },
+  "created_at": "2025-01-04T12:00:00Z"
+}
+```
+
+**Common Operations**:
+- `start` - Deployment startup
+- `stop` - Deployment shutdown
+- `health_check` - Health verification
+- `authentication` - Auth-related events
+- `request` - Individual API requests
+- `error` - Error conditions
+
+### Filtering Logs
+
+**By Level**:
+```sql
+SELECT * FROM deployment_logs 
+WHERE deployment_id = 'your-id' 
+  AND level = 'error'
+ORDER BY created_at DESC;
+```
+
+**By Operation**:
+```sql
+SELECT * FROM deployment_logs 
+WHERE deployment_id = 'your-id' 
+  AND operation = 'request'
+  AND created_at > NOW() - INTERVAL '1 hour'
+ORDER BY created_at DESC;
+```
+
+**By Time Range**:
+```sql
+SELECT * FROM deployment_logs 
+WHERE deployment_id = 'your-id' 
+  AND created_at BETWEEN '2025-01-04 00:00:00' AND '2025-01-04 23:59:59'
+ORDER BY created_at DESC;
+```
+
+## Usage Analytics
+
+### Request Tracking
+
+All MCP server requests are logged in `request_usage_tracking`:
+
+```sql
+SELECT 
+  path,
+  method,
+  COUNT(*) as request_count,
+  AVG(response_time_ms) as avg_response_time,
+  COUNT(*) FILTER (WHERE response_status >= 400) as error_count
+FROM request_usage_tracking
+WHERE deployment_id = 'your-id'
+  AND request_timestamp > NOW() - INTERVAL '24 hours'
+GROUP BY path, method
+ORDER BY request_count DESC;
+```
+
+### Tool Invocation Logs
+
+Track individual tool calls in `tool_invocation_logs`:
+
+```sql
+SELECT 
+  tool_name,
+  COUNT(*) as invocations,
+  AVG(execution_time_ms) as avg_execution_time,
+  COUNT(*) FILTER (WHERE success = false) as failures
+FROM tool_invocation_logs
+WHERE deployment_id = 'your-id'
+  AND created_at > NOW() - INTERVAL '7 days'
+GROUP BY tool_name
+ORDER BY invocations DESC;
+```
+
+### Performance Metrics
+
+**Response Time Distribution**:
+```sql
+SELECT 
+  CASE 
+    WHEN response_time_ms < 100 THEN '< 100ms'
+    WHEN response_time_ms < 500 THEN '100-500ms'
+    WHEN response_time_ms < 1000 THEN '500ms-1s'
+    WHEN response_time_ms < 5000 THEN '1-5s'
+    ELSE '> 5s'
+  END as response_time_bucket,
+  COUNT(*) as request_count
+FROM request_usage_tracking
+WHERE deployment_id = 'your-id'
+  AND request_timestamp > NOW() - INTERVAL '24 hours'
+GROUP BY response_time_bucket
+ORDER BY 
+  CASE response_time_bucket
+    WHEN '< 100ms' THEN 1
+    WHEN '100-500ms' THEN 2
+    WHEN '500ms-1s' THEN 3
+    WHEN '1-5s' THEN 4
+    ELSE 5
+  END;
+```
+
+**Error Rate**:
+```sql
+SELECT 
+  DATE_TRUNC('hour', request_timestamp) as hour,
+  COUNT(*) as total_requests,
+  COUNT(*) FILTER (WHERE response_status >= 400) as errors,
+  ROUND(100.0 * COUNT(*) FILTER (WHERE response_status >= 400) / COUNT(*), 2) as error_rate_pct
+FROM request_usage_tracking
+WHERE deployment_id = 'your-id'
+  AND request_timestamp > NOW() - INTERVAL '24 hours'
+GROUP BY hour
+ORDER BY hour DESC;
+```
+
+## Troubleshooting Deployments
+
+### Common Issues
+
+#### 1. Deployment Stuck in "Generating"
+
+**Symptoms**:
+- Status remains "generating" for > 2 minutes
+- No progress in logs
+
+**Diagnosis**:
+```sql
+SELECT * FROM deployment_logs 
+WHERE deployment_id = 'your-id' 
+ORDER BY created_at DESC 
+LIMIT 10;
+```
+
+**Solutions**:
+1. Check logs for specific error messages
+2. Verify OpenAPI spec is valid
+3. Ensure no rate limit exceeded
+4. Try stopping and restarting deployment
+5. Contact support with deployment_id if persists
+
+#### 2. Authentication Failures
+
+**Symptoms**:
+- 401 Unauthorized responses
+- "Invalid token" errors in logs
+
+**Diagnosis**:
+```sql
+SELECT * FROM deployment_logs 
+WHERE deployment_id = 'your-id' 
+  AND operation = 'authentication'
+  AND level = 'error'
+ORDER BY created_at DESC;
+```
+
+**Solutions for OAuth**:
+- Verify client_id and client_secret are correct
+- Check if access token has expired (1-hour TTL)
+- Re-authorize if token revoked
+- Verify OAuth endpoints are correct
+
+**Solutions for JWT**:
+- Confirm JWT token is valid and not expired
+- Check if user logged out (invalidates tokens)
+- Get fresh token from dashboard
+- Verify Authorization header format: `Bearer <token>`
+
+#### 3. Tool Execution Failures
+
+**Symptoms**:
+- "Tool execution failed" errors
+- 502 or 504 responses from target API
+
+**Diagnosis**:
+```sql
+SELECT 
+  tool_name,
+  error_message,
+  api_response_status,
+  COUNT(*) as failure_count
+FROM tool_invocation_logs
+WHERE deployment_id = 'your-id'
+  AND success = false
+  AND created_at > NOW() - INTERVAL '1 hour'
+GROUP BY tool_name, error_message, api_response_status
+ORDER BY failure_count DESC;
+```
+
+**Solutions**:
+1. **Check API Credentials**:
+   - Verify credentials are correct in dashboard
+   - Test credentials directly against API
+   - Ensure credentials haven't expired
+
+2. **Verify API Availability**:
+   - Test target API directly with curl
+   - Check if API is experiencing downtime
+   - Review API status page
+
+3. **Review Request Parameters**:
+   - Check required parameters are provided
+   - Verify parameter types match schema
+   - Test with minimal valid payload
+
+4. **Check Rate Limits**:
+   - Review if hitting API provider's rate limits
+   - Implement backoff in client code
+   - Consider caching responses
+
+#### 4. High Response Times
+
+**Symptoms**:
+- Requests taking > 5 seconds
+- Timeouts in client applications
+
+**Diagnosis**:
+```sql
+SELECT 
+  path,
+  method,
+  AVG(response_time_ms) as avg_ms,
+  MAX(response_time_ms) as max_ms,
+  COUNT(*) as request_count
+FROM request_usage_tracking
+WHERE deployment_id = 'your-id'
+  AND request_timestamp > NOW() - INTERVAL '1 hour'
+GROUP BY path, method
+HAVING AVG(response_time_ms) > 1000
+ORDER BY avg_ms DESC;
+```
+
+**Solutions**:
+1. **Optimize Target API**:
+   - Reduce payload size
+   - Use pagination for large datasets
+   - Add indexes on queried fields
+   - Cache frequently-accessed data
+
+2. **Reduce MCP Overhead**:
+   - Minimize credential decryption calls
+   - Cache OpenAPI spec locally
+   - Use simpler authentication method
+
+3. **Client-Side Optimization**:
+   - Implement request timeouts
+   - Add retry with exponential backoff
+   - Cache responses when possible
+
+### Debug Mode
+
+Enable detailed logging for troubleshooting:
+
+1. **View Complete Request/Response**:
+```sql
+SELECT 
+  tool_name,
+  mcp_params,
+  api_method,
+  api_url,
+  error_message
+FROM tool_invocation_logs
+WHERE deployment_id = 'your-id'
+  AND request_id = 'specific-request-id';
+```
+
+2. **Track Request Flow**:
+```sql
+SELECT 
+  level,
+  message,
+  operation,
+  metadata,
+  created_at
+FROM deployment_logs
+WHERE deployment_id = 'your-id'
+  AND error_details->>'request_id' = 'specific-request-id'
+ORDER BY created_at;
+```
+
+## Alerting & Notifications
+
+### Setting Up Alerts
+
+**Error Rate Threshold**:
+Monitor when error rate exceeds 10%:
+
+```sql
+-- Run as scheduled query (every 5 minutes)
+SELECT 
+  d.name as deployment_name,
+  COUNT(*) FILTER (WHERE r.response_status >= 400) as errors,
+  COUNT(*) as total,
+  ROUND(100.0 * COUNT(*) FILTER (WHERE r.response_status >= 400) / COUNT(*), 2) as error_rate
+FROM request_usage_tracking r
+JOIN deployments d ON d.id = r.deployment_id
+WHERE r.request_timestamp > NOW() - INTERVAL '5 minutes'
+  AND d.user_id = auth.uid()
+GROUP BY d.name
+HAVING ROUND(100.0 * COUNT(*) FILTER (WHERE r.response_status >= 400) / COUNT(*), 2) > 10;
+```
+
+**Response Time Threshold**:
+Alert when average response time > 3 seconds:
+
+```sql
+SELECT 
+  d.name as deployment_name,
+  AVG(r.response_time_ms) as avg_response_time
+FROM request_usage_tracking r
+JOIN deployments d ON d.id = r.deployment_id
+WHERE r.request_timestamp > NOW() - INTERVAL '5 minutes'
+  AND d.user_id = auth.uid()
+GROUP BY d.name
+HAVING AVG(r.response_time_ms) > 3000;
+```
+
+**Deployment Down**:
+Check health status every minute:
+
+```bash
+#!/bin/bash
+HEALTH_URL="https://your-deployment-url/health"
+
+response=$(curl -s -o /dev/null -w "%{http_code}" "$HEALTH_URL")
+
+if [ "$response" != "200" ]; then
+  echo "ALERT: Deployment is down (HTTP $response)"
+  # Send notification
+fi
+```
+
+## Best Practices
+
+### Monitoring Strategy
+
+1. **Daily Checks**:
+   - Review deployment status in dashboard
+   - Check for error spikes in logs
+   - Verify usage is within expected range
+
+2. **Weekly Reviews**:
+   - Analyze usage trends
+   - Review slow endpoints
+   - Check authentication failures
+   - Clean up old deployments
+
+3. **Monthly Audits**:
+   - Review all active deployments
+   - Archive unused deployments
+   - Update OpenAPI specs if APIs changed
+   - Rotate API credentials
+
+### Performance Optimization
+
+1. **Cache Aggressively**:
+   - Cache responses in client applications
+   - Use conditional requests (ETag, If-Modified-Since)
+   - Implement local storage for static data
+
+2. **Batch Requests**:
+   - Combine multiple operations when possible
+   - Use pagination for large datasets
+   - Minimize round trips
+
+3. **Monitor Continuously**:
+   - Set up automated alerts
+   - Track response time trends
+   - Monitor error rates
+   - Watch for rate limit warnings
+
+### Security Monitoring
+
+1. **Authentication Events**:
+```sql
+SELECT 
+  event_type,
+  COUNT(*) as event_count,
+  MAX(created_at) as last_occurrence
+FROM security_events
+WHERE user_id = auth.uid()
+  AND created_at > NOW() - INTERVAL '7 days'
+GROUP BY event_type
+ORDER BY event_count DESC;
+```
+
+2. **Unusual Access Patterns**:
+```sql
+SELECT 
+  ip_address,
+  user_agent,
+  COUNT(*) as request_count,
+  COUNT(DISTINCT path) as unique_paths
+FROM request_usage_tracking
+WHERE user_id = auth.uid()
+  AND request_timestamp > NOW() - INTERVAL '1 hour'
+GROUP BY ip_address, user_agent
+HAVING COUNT(*) > 100
+ORDER BY request_count DESC;
+```
+
+3. **Failed Authentication Attempts**:
+```sql
+SELECT 
+  DATE_TRUNC('hour', created_at) as hour,
+  COUNT(*) as failed_attempts
+FROM security_events
+WHERE user_id = auth.uid()
+  AND event_type IN ('login_failed', 'token_expired', 'unauthorized')
+  AND created_at > NOW() - INTERVAL '24 hours'
+GROUP BY hour
+ORDER BY hour DESC;
+```
+
+## Support & Resources
+
+### Getting Help
+
+1. **Check Logs First**: Most issues show clear error messages in logs
+2. **Review Documentation**: [Troubleshooting Guide](./TROUBLESHOOTING.md)
+3. **Test with cURL**: Isolate issue by testing directly
+4. **Contact Support**: Include deployment_id and request_id from logs
+
+### Useful Queries
+
+See [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) for complete query reference.
+
+### Related Documentation
+
+- [User Guide](./USER_GUIDE.md) - Getting started
+- [API Reference](./API_REFERENCE.md) - Complete API documentation
+- [Rate Limits](./RATE_LIMITS.md) - Usage quotas and limits
+- [Security Best Practices](./SECURITY_BEST_PRACTICES.md) - Security guidelines
+ 

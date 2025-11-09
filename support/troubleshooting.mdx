@@ -1,9 +1,226 @@
 ---
-title: "Troubleshooting"
-description: "Common issues and solutions"
-icon: "wrench"
+title: Troubleshooting
+description: Common issues and solutions
+icon: wrench
+---
+# Tydli Troubleshooting Guide
+
+This guide helps you resolve common issues with the Tydli platform.
+
+## 🚨 Common Issues
+
+### Credential Issues
+
+**Issue**: MCP Server returns 401 Unauthorized
+- **Cause**: Invalid or expired API credentials
+- **Solution**:
+  1. Go to deployment settings
+  2. Click "Test Credentials"
+  3. If test fails, update credentials
+  4. Re-test until successful
+  5. See [Credential Troubleshooting Guide](./CREDENTIAL_TROUBLESHOOTING.md)
+
+**Issue**: Connection test passed but Claude fails
+- **Cause**: Different endpoints have different requirements
+- **Solution**:
+  1. Check API documentation for endpoint-specific auth
+  2. Verify all endpoints in OpenAPI spec use same auth
+  3. Test multiple endpoints manually
+  4. See [Credential Troubleshooting Guide](./CREDENTIAL_TROUBLESHOOTING.md)
+
+### File Upload Problems
+
+**Issue**: File upload fails with "Invalid file format" error
+- **Cause**: File is not a valid OpenAPI specification
+- **Solution**: 
+  - Ensure file is JSON or YAML format
+  - Verify OpenAPI version is 3.0 or higher
+  - Check for syntax errors in the specification
+
+**Issue**: File upload stuck at "Uploading..." 
+- **Cause**: Network timeout or file too large
+- **Solution**:
+  - Check file size (max 10MB)
+  - Try refreshing the page
+  - Use paste method for large specifications
+
+### Validation Errors
+
+**Issue**: "Missing required field: info.title"
+- **Solution**: Add required OpenAPI fields:
+  ```yaml
+  openapi: 3.0.1
+  info:
+    title: "Your API Title"
+    version: "1.0.0"
+  ```
+
+**Issue**: "OpenAPI version must be 3.0 or higher"
+- **Solution**: Update version in your specification:
+  ```yaml
+  openapi: 3.0.1  # or 3.0.2, 3.0.3, etc.
+  ```
+
+### Deployment Issues
+
+**Issue**: Deployment stuck in "Generating" status
+- **Cause**: Server generation failed
+- **Solution**:
+  1. Check deployment logs for error details
+  2. Verify OpenAPI specification is valid
+  3. Try regenerating the deployment
+
+**Issue**: MCP Server returns 404 errors
+- **Cause**: Server not properly deployed or stopped
+- **Solution**:
+  1. Check deployment status is "Ready"
+  2. Use "Health Check" to verify server is responding
+  3. Restart deployment if needed
+
+**Issue**: "Rate limit exceeded" errors
+- **Cause**: Too many requests in short time period
+- **Solution**: Wait a few minutes before retrying (see [Rate Limits](./RATE_LIMITS.md) for details)
+
+### Authentication Problems
+
+**Issue**: "Email verification required" error when logging in
+- **Cause**: Account email not verified
+- **Solution**: 
+  1. Check your email inbox for verification link
+  2. Click the link to verify your email
+  3. Return to the application and log in
+  4. If link expired, contact support for new verification email
+
+**Issue**: "Unauthorized" errors when managing deployments
+- **Cause**: Session expired or invalid
+- **Solution**: 
+  1. Sign out and sign back in
+  2. Refresh the page
+  3. Clear browser cache if problems persist
+
+### Performance Issues
+
+**Issue**: Dashboard loading slowly
+- **Cause**: Large number of deployments or logs
+- **Solution**:
+  - Use deployment filters
+  - Clear old deployment logs
+  - Refresh the page
+
+**Issue**: File validation takes too long
+- **Cause**: Large or complex OpenAPI specification
+- **Solution**:
+  - Simplify specification if possible
+  - Break large APIs into smaller specifications
+  - Use URL import instead of file upload
+
+## 🔧 Browser Issues
+
+### Compatibility
+- **Supported Browsers**: Chrome 90+, Firefox 88+, Safari 14+, Edge 90+
+- **JavaScript Required**: Ensure JavaScript is enabled
+- **Ad Blockers**: May interfere with file uploads
+
+### Cache Issues
+If experiencing persistent problems:
+1. Clear browser cache and cookies
+2. Disable browser extensions temporarily
+3. Try incognito/private browsing mode
+
+## 📊 Getting Help
+
+### Check System Status
+- View deployment logs for detailed error information
+- Use health check feature to verify server status
+- Monitor deployment dashboard for real-time updates
+
+### Reporting Issues
+When reporting problems, include:
+- Error messages (exact text)
+- Browser and version
+- Steps to reproduce
+- OpenAPI specification (if applicable)
+
+### Contact Support
+- **Documentation**: Check [User Guide](./USER_GUIDE.md)
+- **API Reference**: See [API Reference](./API_REFERENCE.md)
+- **Status Page**: Monitor platform status
+
+## 🔍 Advanced Debugging
+
+### Database Query Debugging
+
+**Check deployment logs for errors:**
+```sql
+SELECT * FROM deployment_logs 
+WHERE deployment_id = 'your-deployment-id' 
+AND status = 'failure'
+ORDER BY created_at DESC
+LIMIT 20;
+```
+
+**Find slow API endpoints:**
+```sql
+SELECT 
+  path, 
+  AVG(response_time_ms) as avg_ms, 
+  MAX(response_time_ms) as max_ms,
+  COUNT(*) as request_count
+FROM request_usage_tracking
+WHERE deployment_id = 'your-deployment-id'
+  AND response_time_ms IS NOT NULL
+GROUP BY path
+ORDER BY avg_ms DESC
+LIMIT 10;
+```
+
+**Check authentication failures:**
+```sql
+SELECT * FROM deployment_logs
+WHERE deployment_id = 'your-deployment-id'
+  AND operation = 'authentication'
+  AND status = 'failure'
+ORDER BY created_at DESC;
+```
+
+**Monitor error rate:**
+```sql
+SELECT 
+  DATE_TRUNC('hour', created_at) as hour,
+  status,
+  COUNT(*) as count
+FROM deployment_logs
+WHERE deployment_id = 'your-deployment-id'
+  AND created_at > NOW() - INTERVAL '24 hours'
+GROUP BY hour, status
+ORDER BY hour DESC;
+```
+
+**Find requests with errors:**
+```sql
+SELECT 
+  path,
+  response_status,
+  COUNT(*) as error_count
+FROM request_usage_tracking
+WHERE deployment_id = 'your-deployment-id'
+  AND response_status >= 400
+GROUP BY path, response_status
+ORDER BY error_count DESC;
+```
+
+### Development Mode
+For developers using the platform:
+1. Open browser developer tools (F12)
+2. Check Console tab for JavaScript errors
+3. Monitor Network tab for failed requests
+4. Check Application tab for local storage issues
+
+### API Debugging
+- Test MCP endpoints directly using curl
+- Verify JWT tokens are valid
+- Check CORS headers for cross-origin issues
+
 ---
 
-# Troubleshooting
-
-This page will be populated automatically via the documentation sync system.
+*For additional support, consult the complete documentation or contact the development team.* 

@@ -1,11 +1,615 @@
 ---
-title: "User Guide"
-description: "Complete guide to using Tydli"
-icon: "book-open"
+title: User Guide
+description: Complete guide to using Tydli
+icon: book-open
+---
+# User Guide - API Docs to MCP Server
+
+## Overview
+
+This guide walks you through using the API Docs to MCP Server platform to convert your OpenAPI specifications into live MCP servers that AI agents can consume. The platform supports both direct JWT authentication and OAuth 2.1 with PKCE for seamless integration with Claude Desktop and other AI agents.
+
+## Table of Contents
+
+1. [Getting Started](#getting-started)
+2. [Uploading API Specifications](#uploading-api-specifications)
+3. [OAuth Integration for AI Agents](#oauth-integration-for-ai-agents)
+4. [Managing Deployments](#managing-deployments)
+5. [Monitoring and Analytics](#monitoring-and-analytics)
+6. [Troubleshooting](#troubleshooting)
+
+## Quick Start with Claude Desktop
+
+### Step 1: Create an MCP Server
+
+1. Sign in to your account
+2. Go to the Dashboard
+3. Upload your OpenAPI specification (JSON or YAML)
+4. Configure authentication (if required)
+5. **Test your credentials** - Click "Test Connection" to validate before deploying
+6. Click "Generate MCP Server"
+7. Wait for deployment to complete (usually under 1 minute)
+
+### Step 2: Verify Credentials Work
+
+**IMPORTANT**: Always test credentials before connecting to Claude:
+
+1. **Pre-deployment testing**:
+   - After configuring credentials, click "Test Connection"
+   - Wait for validation result
+   - Only proceed if test passes
+
+2. **Post-deployment testing**:
+   - Find your deployment card in dashboard
+   - Click "Test Credentials" button
+   - Verify credentials still work
+   - Update if test fails
+
+### Step 3: Configure Claude Desktop
+
+1. **Get Your MCP Server URL**
+   - After deployment, copy your MCP server URL from the dashboard
+   - It will look like: `https://...supabase.co/functions/v1/mcp-router/your-api-xxxxx`
+
+2. **Register OAuth Client**
+
+   Make a POST request to register Claude as an OAuth client:
+
+   ```bash
+   curl -X POST https://...supabase.co/functions/v1/mcp-oauth-server/register \
+     -H "Content-Type: application/json" \
+     -d '{
+       "client_name": "Claude Desktop",
+       "redirect_uris": ["http://localhost:3000/callback"],
+       "grant_types": ["authorization_code"],
+       "response_types": ["code"],
+       "token_endpoint_auth_method": "none"
+     }'
+   ```
+
+   Save the returned `client_id`.
+
+3. **Update Claude Configuration**
+
+   Edit your Claude Desktop config file:
+   
+   **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`  
+   **Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
+
+   ```json
+   {
+     "mcpServers": {
+       "your-api": {
+         "url": "https://...supabase.co/functions/v1/mcp-router/your-api-xxxxx",
+         "transport": "http",
+         "oauth": {
+           "client_id": "mcp_xxxxx-xxxxx-xxxxx",
+           "authorization_url": "https://...supabase.co/functions/v1/mcp-oauth-server/authorize",
+           "token_url": "https://...supabase.co/functions/v1/mcp-oauth-server/token",
+           "scopes": ["openid", "email"]
+         }
+       }
+     }
+   }
+   ```
+
+   **Note**: The `.well-known/mcp-server` discovery endpoint is automatically detected by MCP clients - don't include it in the base URL.
+
+4. **Restart Claude Desktop**
+
+5. **Authorize Access**
+   - Claude will open an authorization page
+   - Sign in with your Tydli account
+   - Approve the access request
+   - Claude will now have access to your MCP server tools
+
+### Step 3: Use Your API in Claude
+
+Once configured, you can use your API naturally in conversations:
+
+```
+User: Get the list of users from the API
+
+Claude: I'll use the get_users tool to fetch that for you.
+[Calls your API endpoint]
+Here are the users: ...
+```
+
+
+
+### 1. Account Setup
+
+**Sign Up**
+1. Navigate to the application
+2. Click "Get Started" or the sign-in button
+3. Enter your email address and create a password
+4. Check your email for the verification link
+5. Click the verification link to confirm your email address
+6. Return to the application and log in
+
+**Important**: Email verification is required. Unverified accounts cannot access the dashboard.
+
+**Profile Management**
+- Your profile is automatically created with your display name
+- Access your profile info from the header
+
+### 2. Understanding the Interface
+
+**Header Section**
+- Shows your email address and current login status
+- Sign out button for account management
+
+**Hero Section**
+- Project overview and value proposition
+- Quick access to getting started
+
+**Upload Section**
+- Three methods to import your OpenAPI specification
+- Validation and generation controls
+
+**Deployment Dashboard**
+- Real-time status of all your deployments
+- Management controls and monitoring
+
+## Uploading API Specifications
+
+### Method 1: File Upload
+
+**Supported Formats**
+- `.json` files (OpenAPI JSON format)
+- `.yaml` and `.yml` files (OpenAPI YAML format)
+- Maximum file size: 10MB
+
+**How to Upload**
+1. Click the "File Upload" tab
+2. Drag and drop your file onto the upload area, or
+3. Click "Choose File" to browse your computer
+4. Selected file details will be displayed
+5. Use the X button to remove and select a different file
+
+**File Requirements**
+- Must be valid JSON or YAML syntax
+- Must contain a valid OpenAPI 3.0+ specification
+- Should include required fields: `info.title`, `info.version`, `paths`
+
+### Method 2: Paste Content
+
+**How to Use**
+1. Click the "Paste JSON/YAML" tab
+2. Copy your OpenAPI specification content
+3. Paste it into the large text area
+4. The system will auto-detect JSON vs YAML format
+
+**Content Detection**
+- JSON: Content starting with `{` or `[`
+- YAML: Content not starting with JSON syntax
+
+### Method 3: URL Import
+
+**How to Use**
+1. Click the "From URL" tab
+2. Enter the public URL of your OpenAPI specification
+3. Ensure the URL is publicly accessible (no authentication required)
+
+**Supported URLs**
+- Direct links to `.json` files
+- Direct links to `.yaml` or `.yml` files
+- API documentation URLs serving raw specifications
+- Must return valid OpenAPI content
+
+**Examples**
+```
+https://api.example.com/swagger.json
+https://api.example.com/openapi.yaml
+https://raw.githubusercontent.com/user/repo/main/api.yaml
+```
+
+## Validation Process
+
+### Running Validation
+
+1. After selecting your input method and providing the specification
+2. Click "Validate Spec" button
+3. Wait for validation to complete (usually 2-5 seconds)
+
+### Validation Results
+
+**Success Indicators**
+- ✅ Green checkmark with "Valid OpenAPI X.X specification detected"
+- Shows number of endpoints found
+- Displays the OpenAPI version detected
+
+**Error Indicators**
+- ❌ Red X with "Invalid specification format"
+- Lists up to 3 specific errors found
+- Shows count if more than 3 errors exist
+
+### Common Validation Errors
+
+**Missing Required Fields**
+- `info.title` is required
+- `info.version` is required
+- `paths` object must exist and contain at least one path
+
+**Version Issues**
+- Only OpenAPI 3.0+ is supported (not Swagger 2.0)
+- Version must be specified in `openapi` field
+
+**Syntax Errors**
+- Invalid JSON syntax
+- Invalid YAML syntax
+- Malformed object structures
+
+## Generating MCP Servers
+
+### Starting Generation
+
+1. Ensure your specification has been successfully validated
+2. Click "Generate MCP Server" button
+3. The system will show "Generating..." status
+4. Monitor progress in the Deployment Dashboard below
+
+### Generation Process
+
+**What Happens**
+1. System analyzes your OpenAPI specification
+2. Extracts all endpoints, parameters, and schemas
+3. Generates compliant MCP server code
+4. Deploys the server as a live Edge Function
+5. Registers the server in the routing system
+6. Provides you with a live URL
+
+**Typical Timeline**
+- Validation: 2-5 seconds
+- Code Generation: 10-20 seconds
+- Deployment: 5-15 seconds
+- Total Time: 20-40 seconds
+
+## Managing Deployments
+
+### Deployment Dashboard
+
+The dashboard shows all your MCP server deployments with:
+
+**Status Indicators**
+- 🟡 **Generating**: Server is being created and deployed
+- 🟢 **Ready**: Server is live and ready to use
+- 🔴 **Stopped**: Server is deployed but inactive
+- ⚠️ **Error**: Generation failed or runtime error occurred
+
+**Deployment Information**
+- **Name**: Based on your API title or generated automatically
+- **Status**: Current operational state
+- **Created**: When the deployment was initiated
+- **URL**: Live endpoint for AI agents (when ready)
+- **Endpoints**: Number of API endpoints converted
+
+### Deployment Controls
+
+**Start/Stop**
+- Click "Start" to activate a stopped deployment
+- Click "Stop" to deactivate a running deployment
+- Stopping saves resources while preserving the deployment
+
+**Health Check**
+- Click "Health Check" to test server responsiveness
+- Results show response time and status
+- Helps diagnose connectivity or performance issues
+
+**View Logs**
+- Click "View Logs" to see real-time deployment activity
+- Shows generation progress, errors, and runtime information
+- Logs are automatically refreshed
+- Most recent entries appear at the top
+
+**Copy URL**
+- Click "Copy URL" to get the MCP server endpoint
+- Use this URL to configure AI agents  
+- URLs follow the format: `https://[project].supabase.co/functions/v1/mcp-router/[slug]`
+- **Important**: All MCP servers support both OAuth 2.1 and JWT authentication
+
+## OAuth Integration for AI Agents
+
+For comprehensive OAuth 2.1 setup instructions, including:
+- Why use OAuth 2.1 with PKCE
+- Step-by-step Claude Desktop configuration
+- Redirect URI configuration for different clients
+- Mobile-responsive authorization flow
+- Security best practices
+- Troubleshooting common issues
+
+**See the complete [OAuth Integration Guide](./OAUTH_INTEGRATION_GUIDE.md)**
+
+## Using Generated MCP Servers
+
+### Getting Your Deployment Bearer Token
+
+Each MCP server can use bearer token authentication as an alternative to OAuth 2.1. To get your static bearer token (when `mcp_auth_method='jwt'`):
+
+**Important**: This token is NOT a JWT - it's a static bearer token that never expires. See [API Reference - Authentication Token Types](./API_REFERENCE.md#authentication-token-types) for the distinction.
+
+1. **View in Deployment Card**: When your deployment is ready, you'll see a "Deployment Authentication Token" section
+2. **Show/Hide Token**: Click the eye icon to reveal or hide your token
+3. **Multiple Copy Options**: Use the convenient copy buttons for different formats:
+   - **Copy Token**: Just the raw bearer token
+   - **Copy Claude Config**: Complete claude_desktop_config.json snippet
+   - **Copy Auth Header**: Ready-to-use Authorization header
+   - **Copy cURL**: Test command with authentication
+
+**Security Note**: This token never expires and acts like an API key. Treat it as a sensitive credential.
+
+### MCP Server URLs
+
+Each successful deployment provides a unique authenticated URL:
+```
+https://nqfciqtsrcjorlqcglmq.supabase.co/functions/v1/mcp-router/[your-deployment-slug]
+```
+
+**Authentication Required**: All MCP server access requires valid authentication for security (OAuth 2.1 recommended, static bearer token also supported).
+
+### Configuring AI Agents
+
+#### Claude Desktop Setup
+
+**For OAuth 2.1 Authentication (Recommended):**
+
+1. Open Claude Desktop → **Settings → Connectors**
+2. Click **"Add custom connector"**
+3. Enter your deployment details:
+   - **Name**: `Tydli - [your-deployment-slug]`
+   - **MCP Server URL**: Your MCP router URL
+   - **OAuth Client ID**: (from your deployment dashboard)
+   - **Authorization URL**: `https://nqfciqtsrcjorlqcglmq.supabase.co/functions/v1/mcp-oauth-server/authorize`
+   - **Token URL**: `https://nqfciqtsrcjorlqcglmq.supabase.co/functions/v1/mcp-oauth-server/token`
+4. Click **Connect** - your browser will open for authorization
+5. **Verify Connection**: Ask Claude about available tools to confirm setup
+
+**For Static Bearer Token Authentication:**
+
+Bearer token authentication (when deployment has `mcp_auth_method='jwt'`) requires a custom MCP client implementation that supports bearer token authentication. The token is a static credential (not a JWT) that never expires. Configuration details are available in your deployment dashboard. See the [OAuth Integration Guide](./OAUTH_INTEGRATION_GUIDE.md) for complete setup instructions.
+
+#### Other MCP Clients
+
+**Continue.dev Configuration**:
+```json
+{
+  "mcpServers": {
+    "your-api-name": {
+      "transport": {
+        "type": "fetch",
+        "url": "your-mcp-server-url",
+        "headers": {
+          "Authorization": "Bearer your-bearer-token-here"
+        }
+      }
+    }
+  }
+}
+```
+
+**Generic HTTP Client Setup**:
+- **URL**: Your MCP server URL from the deployment card
+- **Method**: POST for MCP calls, GET for server info
+- **Headers**: `Authorization: Bearer your-bearer-token-here` (when using static token auth)
+- **Content-Type**: `application/json`
+
+### Testing Your MCP Server
+
+#### Quick Testing with cURL
+
+1. **Get Test Command**: Click "Copy cURL" in your deployment card
+2. **Run Test**: Paste and run in your terminal:
+```bash
+curl -X GET "your-mcp-server-url" \
+  -H "Authorization: Bearer your-bearer-token" \
+  -H "Content-Type: application/json"
+```
+3. **Expected Response**: Should return MCP server info with available tools
+
+#### Testing MCP Tool Calls
+
+```bash
+curl -X POST "your-mcp-server-url" \
+  -H "Authorization: Bearer your-bearer-token" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "method": "tools/call",
+    "params": {
+      "name": "your-tool-name",
+      "arguments": {}
+    }
+  }'
+```
+
+#### Agent Testing
+
+1. **Configure AI Agent**: Use the generated configuration from your deployment card
+2. **Restart Agent**: Close and reopen your AI agent application
+3. **Verify Connection**: Ask the agent: "What tools do you have available?"
+4. **Test API Calls**: Ask the agent to use your API endpoints
+5. **Monitor Logs**: Check deployment logs for request activity
+
+#### Authentication Troubleshooting
+
+**Token Issues**:
+- **Expired Token**: Tokens are tied to your session - refresh the page if needed
+- **Invalid Format**: Ensure you're using the complete Bearer token
+- **Copy Errors**: Use the copy buttons rather than manual selection
+
+**Agent Issues**:
+- **Configuration**: Verify config file syntax and location
+- **Agent Support**: Ensure your AI agent supports MCP authentication
+- **Network**: Check firewall/proxy settings aren't blocking requests
+
+**OAuth Redirect URI Issues**:
+- **"Invalid redirect_uri"**: 
+  - Ensure the redirect URI in your request exactly matches one registered in your OAuth client
+  - For Claude Desktop, verify you registered `http://127.0.0.1:6277/callback`
+  - Check for trailing slashes or protocol mismatches (http vs https)
+- **"Authorization callback timeout"**:
+  - Claude Desktop may be using a different port - try registering multiple URIs (6277-6287)
+  - Ensure no other application is using port 6277
+  - Check firewall settings aren't blocking localhost connections
+- **"Client type mismatch"**:
+  - Verify you selected the correct client type when registering
+  - Claude Desktop users should select "Claude Desktop" option
+  - Custom web apps should select "Custom Web App"
+
+**Common Error Messages**:
+- `Authentication required` → Missing or invalid bearer token (or OAuth failure)
+- `MCP server not found` → Check URL and deployment status
+- `Rate limit exceeded` → Wait before making more requests
+- `Invalid redirect_uri` → Redirect URI not registered for this client
+- `Invalid client_id` → Check your OAuth client credentials
+
+## Troubleshooting
+
+### Upload Issues
+
+**File Won't Upload**
+- Check file size (must be under 10MB)
+- Ensure file extension is `.json`, `.yaml`, or `.yml`
+- Verify file isn't corrupted
+
+**Paste Issues**
+- Ensure content is valid JSON or YAML
+- Check for invisible characters or encoding issues
+- Try copying from a plain text editor
+
+**URL Issues**
+- Verify URL is publicly accessible
+- Check that URL returns raw specification content
+- Ensure no authentication is required
+
+### Validation Failures
+
+**"Invalid specification format"**
+- Check OpenAPI version (must be 3.0+)
+- Ensure required fields are present
+- Validate JSON/YAML syntax
+
+**Network Errors**
+- Check your internet connection
+- Try refreshing the page
+- Contact support if errors persist
+
+### Generation Problems
+
+**Generation Stuck**
+- Check the logs for specific error details
+- Refresh the page to see current status
+- Most generations complete within 2 minutes
+
+**Server Not Responding**
+- Run a health check to test connectivity
+- Check logs for runtime errors
+- Try stopping and restarting the deployment
+
+### Runtime Issues
+
+**MCP Server Errors**
+1. Check deployment logs for error details
+2. Verify your original OpenAPI spec has valid endpoint definitions
+3. Test individual endpoints to isolate issues
+4. Contact support with specific error messages
+
+**AI Agent Connection Issues**
+1. **Authentication Required**: Verify your AI agent supports MCP authentication (OAuth 2.1 or bearer token)
+2. Check that the server status is "Ready"
+3. Ensure your AI agent can handle authenticated MCP endpoints
+4. Review agent-specific MCP authentication configuration requirements
+5. Check deployment logs for authentication error details
+
+**Common Authentication Issues**
+- **Browser Access Blocked**: Expected behavior - browsers cannot provide bearer tokens or complete OAuth flows
+- **Agent Auth Failure**: Ensure agent supports MCP authentication (OAuth 2.1 recommended)
+- **Token/OAuth Expired**: For bearer tokens (never expire but can be deleted); for OAuth check session refresh
+- **Configuration Error**: Verify agent authentication configuration is correct
+
+## Best Practices
+
+### OpenAPI Specification Guidelines
+
+**Structure**
+- Include comprehensive endpoint descriptions
+- Define clear parameter names and types
+- Provide example values where helpful
+- Use consistent naming conventions
+
+**Documentation**
+- Write clear operation summaries
+- Include detailed parameter descriptions
+- Document expected response formats
+- Specify error conditions
+
+### Deployment Management
+
+**Naming**
+- Use descriptive names for your deployments
+- Include version information when relevant
+- Keep names consistent with your API naming
+
+**Monitoring**
+- Regularly check deployment status
+- Review logs for any warnings or errors
+- Monitor health check results
+- Keep track of which AI agents are using each deployment
+
+### Security Considerations
+
+**MCP Authentication Requirements**
+- All MCP servers require authentication for secure access (OAuth 2.1 recommended, static bearer token alternative)
+- OAuth tokens are session-based and automatically invalidate
+- Bearer tokens (when `mcp_auth_method='jwt'`) never expire - treat as API keys
+- Tokens provide access only to your own deployments and data
+- Never share authentication credentials publicly or in unsecured locations
+
+**Token Management Best Practices**
+- **Use Copy Buttons**: Always use the provided copy buttons in deployment cards
+- **Secure Storage**: Store credentials securely in your AI agent configuration files
+- **OAuth Preferred**: Use OAuth 2.1 when possible for better security (auto-refresh, expiration)
+- **Bearer Token Security**: If using static bearer tokens, rotate them regularly by recreating deployments
+- **Regular Rotation**: Log out and back in periodically to refresh tokens
+- **Environment Isolation**: Use different tokens for development and production setups
+
+**API Credentials**  
+- API credentials are encrypted when stored in the database
+- Credentials are never logged or exposed in error messages
+- Consider rotating API keys regularly for enhanced security
+- Monitor API usage through your provider's dashboard
+
+**Access Control**
+- Generated servers use secure sandboxed execution environment  
+- User data isolated through Row Level Security policies
+- Request rate limiting enforced per user
+- MCP server URLs require valid authentication  
+- Users can only access their own deployments and data
+- Deployment logs contain no sensitive credential information
+- All database access governed by RLS policies
+
+## Support and Feedback
+
+### Getting Help
+
+**Check the Documentation**
+- Review this user guide thoroughly
+- Reference the troubleshooting section
+- Check deployment logs for specific errors
+
+**Common Solutions**
+- Refresh the page if interface seems stuck
+- Clear browser cache for persistent issues
+- Verify internet connectivity
+- Try a different browser if problems persist
+
+### Providing Feedback
+
+When reporting issues, please include:
+- Your deployment name and ID
+- Specific error messages from logs
+- Steps to reproduce the problem
+- Your OpenAPI specification (if comfortable sharing)
+
 ---
 
-# User Guide
-
-This page will be populated automatically via the documentation sync system.
-
-Please check back after the first sync completes, or visit the [Tydli GitHub repository](https://github.com/MaxWillEj/tydliio) for the latest documentation.
+*Happy deploying! Transform your APIs into AI-ready MCP servers in seconds.* 🚀 

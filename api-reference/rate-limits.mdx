@@ -1,9 +1,428 @@
 ---
-title: "Rate Limits"
-description: "API rate limiting and quotas"
-icon: "gauge"
+title: Rate Limits
+description: API rate limiting and quotas
+icon: gauge
 ---
+# Rate Limits & Quotas
 
-# Rate Limits
+This document provides comprehensive information about rate limits, quotas, and usage restrictions on the Tydli platform.
 
-This page will be populated automatically via the documentation sync system.
+## Overview
+
+Rate limiting protects the platform from abuse while ensuring fair resource allocation across all users. Limits apply at multiple levels: per-user, per-deployment, and per-OAuth-client.
+
+## User Rate Limits
+
+### Free Tier
+
+Default limits for free tier accounts:
+
+| Metric | Limit | Time Window |
+|--------|-------|-------------|
+| **Deployments** | 3 active | Total |
+| **Endpoints per Deployment** | 50 | Per deployment |
+| **Total Endpoints** | 150 | Across all deployments |
+| **Requests per Hour** | 250 | Rolling 60-minute window |
+| **Requests per Month** | 1,500 | Calendar month |
+| **Gallery Deployments** | 5 | Per hour |
+| **Gallery Deployments** | 20 | Per day |
+| **AI Document Processing** | 5 successful | Per day |
+
+### Paid Tiers
+
+See your dashboard or billing page for plan-specific limits. Paid plans offer:
+- More active deployments
+- Higher endpoints per deployment limit
+- Increased request quotas
+- Higher gallery deployment limits
+- Priority support
+- Custom limits available for enterprise
+
+**Gallery Deployment Limits by Plan**:
+
+| Plan | Gallery Deploys/Hour | Gallery Deploys/Day |
+|------|---------------------|---------------------|
+| Free | 5 | 20 |
+| Pro | 20 | 100 |
+| Enterprise | 50 | 500 |
+
+### Checking Your Limits
+
+View current limits and usage:
+1. **Dashboard Header**: Shows current usage as percentage
+2. **Settings Page**: Detailed breakdown of limits
+3. **API Response**: Rate limit headers on every request
+
+```http
+X-RateLimit-Limit: 250
+X-RateLimit-Remaining: 187
+X-RateLimit-Reset: 1704110400
+```
+
+## Request Rate Limits
+
+### Per-User Limits
+
+**Hourly Limit**:
+- **Window**: Rolling 60-minute window
+- **Enforcement**: Per user_id
+- **Applies to**: All MCP server requests
+- **Reset**: Continuous rolling window
+
+**Monthly Limit**:
+- **Window**: Calendar month (UTC)
+- **Enforcement**: Per user_id
+- **Applies to**: All MCP server requests
+- **Reset**: 1st day of month at 00:00 UTC
+
+### Rate Limit Response
+
+When rate limit is exceeded, you'll receive:
+
+```http
+HTTP/1.1 429 Too Many Requests
+Content-Type: application/json
+Retry-After: 3600
+
+{
+  "error": "RATE_LIMIT_EXCEEDED",
+  "message": "Hourly rate limit exceeded",
+  "details": "You have exceeded 20 requests per hour. Please try again later.",
+  "request_id": "abc-123-def",
+  "limits": {
+    "requests_this_hour": 21,
+    "hourly_limit": 20,
+    "requests_this_month": 234,
+    "monthly_limit": 1000,
+    "retry_after_seconds": 3600
+  }
+}
+```
+
+**Client Handling**:
+1. Check `Retry-After` header (seconds until reset)
+2. Implement exponential backoff
+3. Cache responses to reduce requests
+4. Consider upgrading plan if consistently hitting limits
+
+## OAuth Rate Limits
+
+### OAuth-Specific Limits
+
+OAuth endpoints have separate rate limits to prevent brute-force attacks:
+
+| Endpoint | Limit | Time Window |
+|----------|-------|-------------|
+| `/register` | 20 requests | Per hour per IP |
+| `/authorize` | 20 requests | Per hour per IP |
+| `/token` | 10 requests | Per minute per client |
+
+### OAuth Limit Response
+
+```http
+HTTP/1.1 429 Too Many Requests
+Content-Type: application/json
+Retry-After: 600
+
+{
+  "error": "rate_limit_exceeded",
+  "error_description": "Too many token requests. Please try again in 600 seconds."
+}
+```
+
+### OAuth Best Practices
+
+**✅ DO:**
+- Cache access tokens until expiration
+- Use refresh tokens to get new access tokens
+- Implement exponential backoff on 429 responses
+- Monitor token usage in your application
+
+**❌ DON'T:**
+- Request new tokens for every API call
+- Ignore refresh token flow
+- Retry immediately on 429 errors
+- Create multiple OAuth clients unnecessarily
+
+## Deployment Limits
+
+### Active Deployments
+
+- **Free Tier**: 10 active deployments
+- **Paid Tiers**: See your plan details
+
+**Deployment States**:
+- **Active (counts toward limit)**: `generating`, `deploying`, `ready`
+- **Inactive (doesn't count)**: `stopped`, `error`, `archived`
+
+**Reaching Limit**:
+- Cannot create new deployments until existing ones are stopped or deleted
+- Error message: `"Maximum active deployments reached"`
+- Solution: Stop unused deployments or upgrade plan
+
+### Endpoints per Deployment
+
+- **Free Tier**: 50 endpoints per deployment
+- **Total across all deployments**: 100 endpoints
+- **Enforcement**: At deployment creation time
+
+**Large API Specs**:
+- If your OpenAPI spec exceeds endpoint limits, consider:
+  - Splitting into multiple smaller specs
+  - Removing rarely-used endpoints
+  - Upgrading to a higher tier
+
+## AI Processing Limits
+
+### Document Processing
+
+AI document processing (converting PDFs, Word docs, etc. to OpenAPI specs):
+
+| Metric | Limit | Time Window |
+|--------|-------|-------------|
+| **Successful Requests** | 5 | Per day (UTC) |
+| **Max Document Size** | 10 MB | Per file |
+| **Supported Formats** | PDF, DOCX, DOC, TXT, MD | - |
+| **Max Pages** | 50 pages | Per document |
+
+### AI Limit Response
+
+```json
+{
+  "error": "QUOTA_EXCEEDED",
+  "message": "Daily AI processing limit exceeded",
+  "details": "You have used 5 of 5 daily AI document processing credits. Limit resets at midnight UTC.",
+  "request_id": "abc-123-def",
+  "usage": {
+    "daily_usage": 5,
+    "daily_limit": 5,
+    "remaining": 0,
+    "resets_at": "2025-01-05T00:00:00Z"
+  }
+}
+```
+
+### Checking AI Usage
+
+```sql
+SELECT * FROM ai_usage_tracking 
+WHERE user_id = auth.uid() 
+  AND request_date = CURRENT_DATE;
+```
+
+Or use the database function:
+
+```sql
+SELECT * FROM get_ai_usage_summary(auth.uid());
+```
+
+## Quota Management
+
+### Monitoring Usage
+
+**Real-Time Monitoring**:
+1. **Dashboard**: Header shows current usage percentage
+2. **Deployment Logs**: Track individual request counts
+3. **Usage Analytics**: Detailed breakdown per deployment
+
+**Database Queries**:
+
+Check current usage:
+```sql
+SELECT * FROM get_current_usage(auth.uid());
+```
+
+Check if rate limits allow new requests:
+```sql
+SELECT * FROM check_rate_limits(auth.uid());
+```
+
+Get detailed usage with limit status:
+```sql
+SELECT * FROM check_and_log_rate_limits(auth.uid());
+```
+
+### Usage Optimization
+
+**Reduce Request Count**:
+- **Cache responses**: Store frequently-accessed data
+- **Batch operations**: Combine multiple calls when possible
+- **Use webhooks**: Instead of polling for changes
+- **Implement pagination**: Request smaller data sets
+
+**Optimize Deployments**:
+- **Stop unused deployments**: Free up quota
+- **Consolidate APIs**: Combine related specs
+- **Remove redundant endpoints**: Trim unused operations
+
+**AI Processing**:
+- **Pre-process documents**: Clean up before upload
+- **Use OpenAPI directly**: Skip AI if you have specs
+- **Batch document conversion**: Plan conversions efficiently
+
+## Plan Upgrades
+
+### When to Upgrade
+
+Consider upgrading if you:
+- Consistently hit rate limits
+- Need more than 10 active deployments
+- Require higher endpoint counts
+- Process more than 5 AI documents daily
+- Need priority support
+
+### How to Upgrade
+
+1. Navigate to **Billing** page in dashboard
+2. Review available plans and features
+3. Select plan that fits your needs
+4. Update payment information
+5. Instant upgrade (no downtime)
+
+**Pro Tips**:
+- Limits increase immediately after upgrade
+- Usage tracking continues without reset
+- Existing deployments remain operational
+- No data migration required
+
+## Rate Limit Headers
+
+All API responses include rate limit headers:
+
+```http
+X-RateLimit-Limit: 250          # Total requests allowed per window
+X-RateLimit-Remaining: 187      # Requests remaining in current window
+X-RateLimit-Reset: 1704110400   # Unix timestamp when window resets
+X-RateLimit-Period: hour        # Time period: 'hour' or 'month'
+```
+
+**Client Implementation**:
+
+```typescript
+const response = await fetch(mcpServerUrl, { headers });
+
+const limit = parseInt(response.headers.get('X-RateLimit-Limit'));
+const remaining = parseInt(response.headers.get('X-RateLimit-Remaining'));
+const reset = parseInt(response.headers.get('X-RateLimit-Reset'));
+
+if (remaining < 10) {
+  console.warn(`Approaching rate limit: ${remaining}/${limit} remaining`);
+}
+
+if (response.status === 429) {
+  const retryAfter = parseInt(response.headers.get('Retry-After'));
+  console.log(`Rate limited. Retry in ${retryAfter} seconds`);
+  // Implement exponential backoff
+}
+```
+
+## Troubleshooting
+
+### "Rate limit exceeded" errors
+
+**Immediate Solutions**:
+1. Check `Retry-After` header for wait time
+2. Implement exponential backoff in your code
+3. Review recent usage in dashboard
+4. Consider upgrading plan if persistent
+
+**Long-Term Solutions**:
+- Cache responses to reduce redundant requests
+- Batch operations to minimize API calls
+- Optimize client code to avoid unnecessary requests
+- Monitor usage trends and plan capacity
+
+### "Maximum deployments reached"
+
+**Solutions**:
+1. Stop unused deployments (status → stopped)
+2. Delete archived deployments
+3. Consolidate similar APIs into one deployment
+4. Upgrade to plan with higher deployment limit
+
+### "Too many endpoints"
+
+**Solutions**:
+1. Remove unused endpoints from OpenAPI spec
+2. Split large API into multiple deployments
+3. Upgrade to plan with higher endpoint limit
+4. Use separate deployments for different API versions
+
+### AI processing quota exceeded
+
+**Solutions**:
+1. Wait until midnight UTC for quota reset
+2. Use pre-existing OpenAPI specs when available
+3. Pre-process documents to reduce complexity
+4. Upgrade to plan with higher AI limits
+
+## Database Functions Reference
+
+### Check Rate Limits
+
+```sql
+-- Check if user can make requests
+SELECT * FROM check_rate_limits(auth.uid());
+-- Returns: within_hourly_limit, within_monthly_limit, requests_this_hour, 
+--          hourly_limit, requests_this_month, monthly_limit
+
+-- Check and log rate limit status
+SELECT * FROM check_and_log_rate_limits(auth.uid());
+-- Returns: within_limits, warning_threshold_reached, current_usage (JSON)
+```
+
+### Get User Limits
+
+```sql
+-- Get current plan limits
+SELECT * FROM get_user_limits(auth.uid());
+-- Returns: max_deployments, max_endpoints_per_deployment, max_total_endpoints,
+--          requests_per_month, requests_per_hour, plan_name
+```
+
+### Check Deployment Capacity
+
+```sql
+-- Check if user can create new deployment
+SELECT * FROM can_create_deployment(auth.uid(), estimated_endpoint_count);
+-- Returns: can_create, reason, current_deployments, max_deployments,
+--          current_endpoints, max_total_endpoints
+```
+
+### Get Current Usage
+
+```sql
+-- Get user's current usage statistics
+SELECT * FROM get_current_usage(auth.uid());
+-- Returns: deployment_count, total_endpoint_count, requests_this_hour,
+--          requests_this_month
+```
+
+## Support
+
+### Getting Help
+
+If you experience rate limiting issues:
+
+1. **Check Documentation**: Review this guide and [Troubleshooting](./TROUBLESHOOTING.md)
+2. **View Logs**: Check deployment logs for specific error details
+3. **Monitor Dashboard**: Track usage patterns in analytics
+4. **Contact Support**: Provide request_id from error response
+
+### Enterprise Plans
+
+Need custom limits? Contact us for enterprise pricing:
+- Custom deployment limits
+- Dedicated infrastructure
+- Higher rate limits
+- SLA guarantees
+- Priority support
+- Custom integrations
+
+## References
+
+- [User Guide](./USER_GUIDE.md) - Getting started guide
+- [API Reference](./API_REFERENCE.md) - Complete API documentation
+- [Troubleshooting](./TROUBLESHOOTING.md) - Common issues and solutions
+- [Security Best Practices](./SECURITY_BEST_PRACTICES.md) - Security guidelines
+ 

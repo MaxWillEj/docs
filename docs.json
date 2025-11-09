@@ -1,29 +1,28 @@
 {
-  "$schema": "https://mintlify.com/schema.json",
-  "theme": "mint",
   "name": "Tydli",
   "logo": {
     "dark": "/logo/dark.svg",
-    "light": "/logo/light.svg",
-    "href": "https://tydli.io"
+    "light": "/logo/light.svg"
   },
   "favicon": "/favicon.svg",
   "colors": {
     "primary": "#3B82F6",
     "light": "#60A5FA",
-    "dark": "#1E40AF"
-  },
-  "navbar": {
-    "links": [
-      {
-        "label": "Dashboard",
-        "href": "https://tydli.io"
-      }
-    ],
-    "primary": {
-      "type": "github",
-      "href": "https://github.com/MaxWillEj/tydliio"
+    "dark": "#1E40AF",
+    "anchors": {
+      "from": "#3B82F6",
+      "to": "#1E40AF"
     }
+  },
+  "topbarLinks": [
+    {
+      "name": "Dashboard",
+      "url": "https://tydli.io"
+    }
+  ],
+  "topbarCtaButton": {
+    "name": "Get Started",
+    "url": "https://tydli.io"
   },
   "navigation": {
     "tabs": [
@@ -56,7 +55,7 @@
         "tab": "API Reference",
         "groups": [
           {
-            "group": "API Overview",
+            "group": "Overview",
             "pages": [
               "api-reference/overview",
               "api-reference/rate-limits"
@@ -96,31 +95,20 @@
           {
             "group": "Updates",
             "pages": [
-              "resources/changelog"
+              "changelog"
             ]
           }
         ]
       }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "Dashboard",
-          "href": "https://tydli.io",
-          "icon": "gauge"
-        },
-        {
-          "anchor": "GitHub",
-          "href": "https://github.com/MaxWillEj/tydliio",
-          "icon": "github"
-        }
-      ]
-    }
+    ]
   },
-  "footer": {
-    "socials": {
-      "github": "https://github.com/MaxWillEj/tydliio",
-      "website": "https://tydli.io"
+  "footerSocials": {
+    "github": "https://github.com/MaxWillEj/tydliio",
+    "website": "https://tydli.io"
+  },
+  "analytics": {
+    "posthog": {
+      "apiKey": "phc_placeholder"
     }
   }
 }

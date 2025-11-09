@@ -1,9 +1,303 @@
 ---
-title: "Security Best Practices"
-description: "Security guidelines and implementation"
-icon: "lock"
+title: Security Best Practices
+description: Security guidelines and implementation
+icon: lock
 ---
-
 # Security Best Practices
 
-This page will be populated automatically via the documentation sync system.
+This document outlines security best practices for using the Tydli platform, both for platform users and administrators.
+
+## For Platform Users
+
+### Account Security
+
+#### Email Verification
+- ✅ **Always verify your email** - Unverified accounts cannot access the dashboard
+- ✅ **Use a strong, unique password** - Minimum 12 characters with mix of uppercase, lowercase, numbers, and symbols
+- ✅ **Don't reuse passwords** - Use a unique password for Tydli
+- ✅ **Enable password manager** - Store credentials securely
+
+#### Session Management
+- ✅ **Log out when done** - Especially on shared computers
+- ✅ **Clear session on suspicious activity** - Log out immediately if you notice unusual behavior
+- ✅ **Don't share session tokens** - JWT tokens provide full account access
+
+### Authentication Methods
+
+#### OAuth 2.1 (Recommended for AI Agents)
+
+**✅ Best Practices:**
+- Only authorize trusted AI agents
+- Review permissions before approving
+- Store client secrets securely (never commit to Git)
+- Use unique client names for tracking (e.g., "Claude Desktop - Work MacBook")
+- Revoke tokens for unused integrations
+
+**❌ Avoid:**
+- Sharing client secrets publicly
+- Using the same client for multiple devices without naming conventions
+- Leaving unused OAuth clients active
+
+#### JWT Authentication
+
+**✅ Best Practices:**
+- Treat JWT tokens like passwords
+- Never commit tokens to version control
+- Rotate tokens regularly by logging out and back in
+- Use environment variables for tokens in integrations
+- Monitor security events for unauthorized access
+
+**❌ Avoid:**
+- Sharing JWT tokens in chat or email
+- Storing tokens in plaintext files
+- Using JWT tokens in public URLs or query parameters
+
+#### Public Access (No Authentication)
+
+**✅ Use Cases:**
+- Public demo APIs
+- Read-only data endpoints
+- Testing and development
+
+**⚠️ Warning:**
+- All usage counts toward your quota
+- Anyone can access your MCP server
+- Rate limits still apply
+- Consider switching to OAuth for production
+
+### API Credentials
+
+#### Credential Storage
+- ✅ **Use Tydli's built-in encryption** - Credentials are encrypted with AES-256
+- ✅ **Minimum privilege principle** - Use API keys with least required permissions
+- ✅ **Rotate credentials regularly** - Update API keys every 90 days
+- ✅ **Delete unused credentials** - Remove credentials for deactivated deployments
+
+#### Credential Usage
+- ✅ **Test with read-only credentials first** - Verify configuration before using write access
+- ✅ **Monitor credential usage** - Check deployment logs for unexpected API calls
+- ✅ **Separate credentials per environment** - Use different keys for dev/staging/prod
+
+**❌ Never:**
+- Hardcode credentials in OpenAPI specs
+- Share credentials between deployments
+- Use production credentials for testing
+
+### OpenAPI Specifications
+
+#### Before Upload
+- ✅ **Remove sensitive data** - No API keys, tokens, or secrets in spec
+- ✅ **Review security schemes** - Ensure auth methods match your API
+- ✅ **Validate locally first** - Use Swagger Editor to catch errors
+- ✅ **Check endpoint permissions** - Verify all endpoints are intentionally exposed
+
+#### Sensitive Information to Remove
+- API keys in examples or default values
+- Internal IP addresses or hostnames
+- Production database connection strings
+- Email addresses or phone numbers
+- Personally identifiable information (PII)
+
+### Rate Limits & Quotas
+
+#### Monitoring Usage
+- ✅ **Check dashboard regularly** - Monitor requests per hour/month
+- ✅ **Set up alerts** - Note when approaching limits
+- ✅ **Review unusual spikes** - Investigate unexpected usage increases
+- ✅ **Plan for growth** - Upgrade plan before hitting limits
+
+#### Avoiding Rate Limit Issues
+- ✅ **Implement exponential backoff** - In client applications
+- ✅ **Cache responses** - Reduce redundant API calls
+- ✅ **Batch requests** - Combine multiple operations when possible
+- ✅ **Monitor `Retry-After` headers** - Respect rate limit cooldowns
+
+### Deployment Management
+
+#### Deployment Security
+- ✅ **Use descriptive names** - "Customer API - Production" vs "api-123"
+- ✅ **Stop unused deployments** - Reduce attack surface
+- ✅ **Delete old deployments** - Remove deployments no longer needed
+- ✅ **Review deployment logs** - Check for errors or suspicious activity
+- ✅ **Run health checks regularly** - Verify deployments are operational
+
+#### Production Deployments
+- ✅ **Use OAuth 2.1** - Provides user consent and token management
+- ✅ **Enable monitoring** - Track usage and errors
+- ✅ **Document deployment purpose** - In deployment description
+- ✅ **Test thoroughly** - Use non-production deployments for testing
+
+## For Administrators
+
+### Database Security
+
+#### Row Level Security (RLS)
+- ✅ **RLS enabled on all tables** - Enforces user data isolation
+- ✅ **Test RLS policies** - Verify users can only access their own data
+- ✅ **Use security definer functions** - For admin operations requiring elevated access
+- ✅ **Audit RLS policy changes** - Log all policy modifications
+
+#### Database Functions
+- ✅ **Validate all inputs** - Never trust user input in SQL functions
+- ✅ **Use parameterized queries** - Prevent SQL injection
+- ✅ **Limit function permissions** - Use `SECURITY DEFINER` sparingly
+- ✅ **Log security events** - Track all security-related operations
+
+### Edge Functions
+
+#### Development
+- ✅ **Validate JWT tokens** - Configure `verify_jwt = true` in config.toml
+- ✅ **Use standardized error handling** - Import from `_shared/errors.ts`
+- ✅ **Never log sensitive data** - Credentials, tokens, or PII
+- ✅ **Implement rate limiting** - Protect against abuse
+- ✅ **Use TypeScript** - Type safety prevents many bugs
+
+#### Deployment
+- ✅ **Test in staging first** - Never deploy directly to production
+- ✅ **Review code changes** - Peer review all function updates
+- ✅ **Monitor error rates** - Track function failures
+- ✅ **Set appropriate timeouts** - Prevent long-running functions
+
+### OAuth Server
+
+#### Client Registration
+- ✅ **Validate redirect URIs** - Enforce HTTPS (except localhost)
+- ✅ **No wildcard domains** - Prevent open redirect vulnerabilities
+- ✅ **Limit redirect URIs** - Maximum 10 per client
+- ✅ **Log all registrations** - Track OAuth client creation
+
+#### Token Management
+- ✅ **Short token expiration** - 1 hour for access tokens, 90 days for refresh
+- ✅ **Enforce PKCE** - S256 code challenge method only
+- ✅ **One-time use codes** - Authorization codes can only be used once
+- ✅ **Revocation support** - Allow users to revoke tokens
+- ✅ **Clean up expired tokens** - Run cleanup functions regularly
+
+### Credential Encryption
+
+#### Encryption Keys
+- ✅ **Use strong keys** - 256-bit encryption keys
+- ✅ **Rotate keys periodically** - Plan for key rotation
+- ✅ **Store keys securely** - Use Supabase Vault or external KMS
+- ✅ **Never commit keys to Git** - Use secrets management
+- ✅ **Separate keys per environment** - Different keys for dev/prod
+
+#### Encryption/Decryption
+- ✅ **Server-side only** - Never decrypt on client
+- ✅ **Use pgcrypto functions** - `encrypt_credential()` and `decrypt_credential()`
+- ✅ **Validate before decryption** - Ensure user owns the credential
+- ✅ **Log decryption attempts** - Track credential access
+
+### Monitoring & Auditing
+
+#### Security Events
+- ✅ **Log all authentication events** - Successful and failed logins
+- ✅ **Track rate limit violations** - Identify potential attacks
+- ✅ **Monitor unusual activity** - Sudden usage spikes, multiple failures
+- ✅ **Review logs regularly** - Weekly security event review
+- ✅ **Set up alerts** - Automated notifications for critical events
+
+#### Access Logs
+- ✅ **Track all API calls** - Log to `request_usage_tracking`
+- ✅ **Include IP addresses** - For abuse investigation
+- ✅ **Record response times** - Identify performance issues
+- ✅ **Log errors with context** - Include deployment_id and user_id
+
+#### Data Retention
+- ✅ **Define retention policies** - Keep logs for 90 days minimum
+- ✅ **Archive old data** - Move historical data to cold storage
+- ✅ **Secure deletion** - Properly delete sensitive data
+- ✅ **GDPR compliance** - Support data export and deletion requests
+
+### Incident Response
+
+#### Preparation
+- ✅ **Document procedures** - Clear incident response plan
+- ✅ **Define roles** - Who handles what during incidents
+- ✅ **Test response plan** - Run drills quarterly
+- ✅ **Maintain contact list** - Key personnel for emergencies
+
+#### Detection
+- ✅ **Monitor alerts** - Real-time security event monitoring
+- ✅ **User reports** - Easy way for users to report issues
+- ✅ **Automated scanning** - Daily security scans (see GitHub Actions workflow)
+
+#### Response
+1. **Assess severity** - Critical, high, medium, low
+2. **Contain threat** - Revoke compromised tokens, disable affected deployments
+3. **Investigate** - Review logs, identify root cause
+4. **Remediate** - Fix vulnerability, update code
+5. **Notify users** - If data breach or service disruption
+6. **Document** - Post-incident review and lessons learned
+
+### Compliance
+
+#### Data Protection
+- ✅ **Encrypt data at rest** - Database encryption enabled
+- ✅ **Encrypt data in transit** - HTTPS/TLS for all connections
+- ✅ **Minimize data collection** - Only collect necessary data
+- ✅ **Secure data deletion** - Proper deletion procedures
+
+#### Privacy
+- ✅ **Privacy policy** - Clear explanation of data usage
+- ✅ **User consent** - Explicit consent for data processing
+- ✅ **Data export** - Allow users to export their data
+- ✅ **Data deletion** - Allow users to delete their accounts
+
+#### Auditing
+- ✅ **Audit trail** - Immutable log of all changes
+- ✅ **Regular audits** - Quarterly security reviews
+- ✅ **Third-party audits** - Annual penetration testing
+- ✅ **Compliance reports** - SOC 2, ISO 27001 if applicable
+
+## Security Checklist
+
+### For New Users
+- [ ] Email verified
+- [ ] Strong password set
+- [ ] OAuth clients registered (if using AI agents)
+- [ ] JWT token stored securely (if using direct access)
+- [ ] OpenAPI specs reviewed for sensitive data
+- [ ] API credentials configured and encrypted
+- [ ] First deployment tested with health check
+- [ ] Usage limits understood
+
+### For Administrators
+- [ ] RLS policies tested for all tables
+- [ ] Database functions reviewed for SQL injection
+- [ ] Edge functions use standardized error handling
+- [ ] OAuth server configured with proper redirect URI validation
+- [ ] Encryption keys stored in Vault/KMS
+- [ ] Monitoring alerts configured
+- [ ] Security event log review scheduled
+- [ ] Incident response plan documented
+- [ ] Data retention policy defined
+- [ ] Compliance requirements met
+
+## Reporting Security Issues
+
+### If You Find a Vulnerability
+
+**DO:**
+- Report privately via security contact (not public GitHub issues)
+- Provide detailed reproduction steps
+- Include potential impact assessment
+- Allow reasonable time for remediation
+
+**DON'T:**
+- Publicly disclose before remediation
+- Exploit the vulnerability
+- Access data that isn't yours
+- Disrupt service for other users
+
+### Contact
+
+For security issues, please contact: [security contact information]
+
+## Resources
+
+- [OWASP Top 10](https://owasp.org/www-project-top-ten/)
+- [OAuth 2.1 Security Best Practices](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-security-topics)
+- [Supabase Security](https://supabase.com/docs/guides/platform/security)
+- [PostgreSQL RLS](https://www.postgresql.org/docs/current/ddl-rowsecurity.html)
+ 
