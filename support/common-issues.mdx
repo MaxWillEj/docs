@@ -1,0 +1,255 @@
+---
+title: Common Issues
+description: Quick fixes for the most frequent problems
+icon: circle-alert
+---
+# Common Issues & Quick Fixes
+
+Resolve the most frequent problems quickly with these troubleshooting guides.
+
+## Deployment Stuck in "Generating" Status
+
+If your deployment fails or gets stuck in "Generating" status:
+
+### Check Deployment Logs
+
+Click on your deployment in the dashboard and look for "View Logs" to see detailed error messages. This is often the fastest way to identify the problem.
+
+### Verify Your OpenAPI Spec
+
+Make sure it's valid JSON/YAML. Try using our example Petstore API to test if the issue is with your spec:
+
+- Valid formats: JSON or YAML
+- Supported versions: OpenAPI 2.0 (Swagger), 3.0, 3.1
+- Use validators: [json lint.com](https://jsonlint.com) or [yamllint.com](https://yamllint.com)
+
+### Wait and Retry
+
+If it's been more than 2 minutes, delete the deployment and try again. Our system auto-recovers from temporary issues.
+
+**Still stuck?** Delete the failed deployment and try with a simplified version of your API spec. Add endpoints gradually to identify which one causes issues.
+
+---
+
+## Getting 401/403 Authentication Errors
+
+Authentication errors usually indicate credential or permission issues.
+
+### Test Credentials Directly
+
+Use curl or Postman to test your API key/credentials against the target API directly to verify they work:
+
+```bash
+curl -H "X-API-Key: YOUR_KEY" https://api.example.com/endpoint
+```
+
+If this fails, the issue is with your credentials, not Tydli.
+
+### Check Credential Format
+
+Ensure you're using the correct format:
+
+- **API keys**: Just the key value (e.g., `sk_live_xxx`)
+- **Bearer tokens**: Don't include "Bearer" prefix in Tydli (we add it automatically)
+- **OAuth**: Ensure client_id and client_secret are correct
+
+### Verify Header Name
+
+Double-check the header name matches your API documentation:
+
+- Some APIs use `X-API-Key`
+- Others use `api-key` or `apikey`
+- OAuth typically uses `Authorization: Bearer`
+- Check your API's documentation for the exact header name
+
+**Pro Tip:** Check your deployment logs for the exact error message. It often reveals if it's a credential, permission, or configuration issue.
+
+---
+
+## Claude Desktop Can't Find My MCP Server
+
+Connection issues between Claude Desktop and your MCP server are usually configuration problems.
+
+### Verify Configuration File
+
+Check `claude_desktop_config.json` for:
+
+- Typos in the server name
+- Incorrect URL (must be the complete MCP server URL)
+- Missing quotes around strings
+- Invalid JSON syntax
+
+Expected format:
+
+```json
+{
+  "mcpServers": {
+    "my-api": {
+      "url": "https://your-deployment-url",
+      "transport": "sse"
+    }
+  }
+}
+```
+
+### Restart Claude Desktop
+
+Completely quit and reopen Claude Desktop after making configuration changes. A simple window close may not reload the config.
+
+**Mac**: Command+Q to fully quit
+**Windows**: Right-click taskbar icon and choose "Quit"
+
+### Test the URL
+
+Open your MCP server URL in a browser. You should see metadata about your server, not an error:
+
+- Status 200 OK
+- JSON response with server information
+- No authentication errors (if using public test)
+
+---
+
+## Getting Rate Limit Errors (429)
+
+Rate limit errors indicate you've exceeded your plan's request quota.
+
+### Check Your Plan Limits
+
+Go to **Settings → Billing** to see your current usage:
+
+- **Free tier**: 20 requests/hour, 1,000 requests/month
+- **Pro tier**: 200 requests/hour, 50,000 requests/month
+- **Enterprise**: Custom limits
+
+### Optimize Your Usage
+
+Reduce the number of API calls:
+
+- **Batch operations**: Combine multiple requests into one
+- **Use pagination**: Limit result sets to what you need
+- **Implement caching**: Cache frequently accessed data
+- **Optimize queries**: Only request necessary fields
+
+### Upgrade Your Plan
+
+If you legitimately need more capacity, check our [pricing page](/pricing) for plans with higher limits.
+
+---
+
+## OpenAPI Spec Won't Validate
+
+Validation errors prevent deployment from starting.
+
+### Check JSON/YAML Syntax
+
+Use a validator to verify your spec is properly formatted:
+
+- **JSON**: [jsonlint.com](https://jsonlint.com)
+- **YAML**: [yamllint.com](https://yamllint.com)
+- **OpenAPI specific**: [editor.swagger.io](https://editor.swagger.io)
+
+### Verify OpenAPI Version
+
+We support:
+
+- OpenAPI 2.0 (Swagger)
+- OpenAPI 3.0
+- OpenAPI 3.1
+
+Check your spec's version field:
+
+```yaml
+openapi: 3.1.0  # or swagger: "2.0"
+```
+
+### Test with an Example
+
+Try deploying the Petstore example API first to verify your account setup is working. If that succeeds, the issue is with your specific spec.
+
+### Common Validation Errors
+
+- **Missing required fields**: Must have `info`, `paths`, and `openapi`/`swagger` version
+- **Invalid $ref references**: All `$ref` paths must resolve to valid schemas
+- **Circular schema definitions**: Avoid schemas that reference themselves
+- **Malformed URLs**: Check the `servers` section for valid URLs
+
+---
+
+## How Do I Test My MCP Server Deployment?
+
+Use the MCP Inspector to test your deployment before connecting to Claude.
+
+### Click "Test with MCP Inspector"
+
+Find this button on your deployment card in the dashboard. It's the recommended first step after deployment.
+
+### Copy and Run the Command
+
+The inspector modal provides a command to run in your terminal:
+
+```bash
+npx @modelcontextprotocol/inspector \
+  https://your-deployment-url
+```
+
+**Requirements**: Node.js 18+ installed
+
+### Test in Your Browser
+
+The inspector opens at `http://localhost:5173` where you can:
+
+- ✅ Execute tools with custom parameters
+- ✅ View resources and their content
+- ✅ Test authentication flows (OAuth/JWT)
+- ✅ See real-time logs and errors
+- ✅ Verify endpoint responses
+
+### What to Test
+
+1. **Tool discovery**: Verify all your API endpoints appear as tools
+2. **Parameter validation**: Test with valid and invalid parameters
+3. **Authentication**: Ensure credentials work correctly
+4. **Error handling**: See how errors are formatted and returned
+5. **Response format**: Verify data is structured as expected
+
+**Learn more**: [MCP Inspector Documentation](https://modelcontextprotocol.io/docs/tools/inspector)
+
+---
+
+## Additional Troubleshooting Resources
+
+### Check These Resources First
+
+- [Troubleshooting Guide](/troubleshooting) - Comprehensive troubleshooting
+- [FAQ](/faq) - Frequently asked questions
+- [Best Practices](/best-practices) - Avoid common pitfalls
+
+### Get Help from the Community
+
+- **Discord**: [Join our community](https://discord.gg/tydli) for real-time help
+- **GitHub Issues**: Report bugs or request features
+- **Documentation**: Search docs.tydli.io for detailed guides
+
+### Contact Support
+
+For account issues, bugs, or detailed technical questions:
+
+- [Contact Support](/contact)
+- Include your deployment ID and error logs
+- Check [Getting Help](/getting-help) for support guidelines
+
+---
+
+## Prevention Tips
+
+Avoid common issues by following these practices:
+
+✅ **Test your OpenAPI spec** in a validator before deploying
+✅ **Verify credentials** work against your API directly
+✅ **Start with simple examples** before complex deployments
+✅ **Monitor your usage** to avoid hitting rate limits
+✅ **Keep specs up to date** when your API changes
+✅ **Use the MCP Inspector** to test before connecting to AI
+✅ **Read deployment logs** to catch issues early
+
+By following these guidelines, you'll avoid 90% of common issues!

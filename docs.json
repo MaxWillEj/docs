@@ -2,7 +2,7 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
   "name": "Tydli",
-  "description": "Deploy your API docs as AI tools — instantly connect Claude, ChatGPT, and Cursor to your documentation with MCP compliance",
+  "description": "Complete user guide for Tydli — deploy your APIs as AI tools instantly. Learn MCP fundamentals, integrate with Claude Desktop, and build AI-accessible APIs.",
   "logo": {
     "dark": "/logo/dark.svg",
     "light": "/logo/light.svg",
@@ -17,13 +17,17 @@
   "navbar": {
     "links": [
       {
-        "label": "MCP Server Marketplace",
-        "href": "https://tydli.io/explore"
+        "label": "Dashboard",
+        "href": "https://tydli.io/dashboard"
+      },
+      {
+        "label": "Discord",
+        "href": "https://discord.gg/tamXgrqxAF"
       }
     ],
     "primary": {
       "type": "button",
-      "label": "Get Started",
+      "label": "Get Started Free",
       "href": "https://tydli.io/auth?tab=signup"
     }
   },
@@ -42,20 +46,34 @@
         "group": "Getting Started",
         "pages": [
           "introduction",
+          "getting-started/quickstart",
+          "getting-started/core-concepts",
           "guides/user-guide"
         ]
       },
       {
         "group": "Guides",
         "pages": [
-          "guides/oauth-integration"
+          "guides/claude-desktop-setup",
+          "guides/authentication-methods",
+          "guides/oauth-integration",
+          "guides/use-cases",
+          "guides/best-practices"
         ]
       },
       {
         "group": "Support",
         "pages": [
+          "support/common-issues",
           "support/troubleshooting",
-          "support/faq"
+          "support/faq",
+          "community/getting-help"
+        ]
+      },
+      {
+        "group": "Advanced",
+        "pages": [
+          "advanced/custom-development"
         ]
       },
       {
@@ -75,8 +93,23 @@
   },
   "footer": {
     "socials": {
-      "website": "https://tydli.io"
-    }
+      "website": "https://tydli.io",
+      "discord": "https://discord.gg/tamXgrqxAF"
+    },
+    "links": [
+      {
+        "label": "Dashboard",
+        "href": "https://tydli.io/dashboard"
+      },
+      {
+        "label": "Contact",
+        "href": "https://tydli.io/contact"
+      },
+      {
+        "label": "Pricing",
+        "href": "https://tydli.io/pricing"
+      }
+    ]
   },
   "search": {
     "prompt": "Search Tydli docs..."
@@ -86,7 +119,11 @@
     "metatags": {
       "og:site_name": "Tydli Documentation",
       "og:type": "website",
-      "og:image": "https://tydli.io/og-image.png"
+      "og:image": "https://tydli.io/og-image.png",
+      "og:description": "Complete documentation for deploying APIs as AI tools with MCP compliance",
+      "twitter:card": "summary_large_image",
+      "twitter:title": "Tydli Documentation - Deploy APIs as AI Tools",
+      "twitter:description": "Learn how to transform OpenAPI specs into MCP servers for Claude, ChatGPT, and more"
     }
   },
   "contextual": {

@@ -1,0 +1,429 @@
+---
+title: Advanced Topics
+description: Deep dive into MCP protocol and custom development
+icon: code
+---
+# Advanced Topics: Custom MCP Development
+
+While Tydli handles most use cases automatically by generating MCP servers from OpenAPI specs, there are scenarios where you may want to build custom MCP servers or dive deeper into the protocol.
+
+## When to Build a Custom MCP Server
+
+Consider building a custom MCP server when you need:
+
+### Complex Multi-API Orchestration
+
+Coordinating multiple APIs with business logic:
+
+```
+Example: E-commerce workflow
+1. Check inventory (API 1)
+2. Calculate shipping (API 2)
+3. Process payment (API 3)
+4. Update order status (API 1 again)
+```
+
+Tydli works best with single-API deployments. For complex orchestration, a custom server gives you full control.
+
+### Custom Business Logic
+
+When you need to:
+
+- Transform data before/after API calls
+- Implement custom validation rules
+- Add caching or rate limiting logic
+- Combine data from multiple sources
+- Apply business rules between API calls
+
+### Real-Time Data Streaming
+
+If your use case requires:
+
+- WebSocket connections
+- Live data feeds
+- Event streams
+- Push notifications
+- Continuous data updates
+
+MCP supports streaming, but Tydli focuses on request/response patterns. Custom servers can implement advanced streaming.
+
+### Custom Protocol Implementations
+
+For specialized scenarios:
+
+- Non-HTTP protocols (gRPC, GraphQL, SOAP)
+- Binary data handling
+- Custom authentication schemes
+- Legacy system integration
+- Proprietary API formats
+
+---
+
+## Custom MCP Server Development
+
+### Official MCP SDK
+
+Anthropic provides official SDKs for building MCP servers:
+
+**TypeScript/JavaScript**:
+```bash
+npm install @modelcontextprotocol/sdk
+```
+
+**Python**:
+```bash
+pip install modelcontextprotocol
+```
+
+### Basic MCP Server Structure
+
+A simple MCP server in TypeScript:
+
+```typescript
+import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+
+const server = new Server({
+  name: "my-custom-server",
+  version: "1.0.0",
+}, {
+  capabilities: {
+    tools: {},
+  },
+});
+
+// Define a tool
+server.setRequestHandler("tools/list", async () => {
+  return {
+    tools: [
+      {
+        name: "get_weather",
+        description: "Get current weather for a location",
+        inputSchema: {
+          type: "object",
+          properties: {
+            location: {
+              type: "string",
+              description: "City name or zip code",
+            },
+          },
+          required: ["location"],
+        },
+      },
+    ],
+  };
+});
+
+// Handle tool calls
+server.setRequestHandler("tools/call", async (request) => {
+  const { name, arguments: args } = request.params;
+
+  if (name === "get_weather") {
+    // Your custom logic here
+    const weather = await fetchWeather(args.location);
+    return { content: [{ type: "text", text: JSON.stringify(weather) }] };
+  }
+});
+
+// Start server
+const transport = new StdioServerTransport();
+await server.connect(transport);
+```
+
+### Learn More
+
+- **Getting Started**: [MCP Documentation](https://modelcontextprotocol.io/docs/getting-started/intro)
+- **Tutorials**: [Build Your First Server](https://modelcontextprotocol.io/tutorials)
+- **Examples**: [MCP GitHub Examples](https://github.com/modelcontextprotocol/examples)
+
+---
+
+## MCP Protocol Deep Dive
+
+Understanding the technical details of how MCP works.
+
+### Transport Layer
+
+**Server-Sent Events (SSE) over HTTP**:
+
+- Real-time, one-way communication from server to client
+- Text-based protocol over HTTP
+- Automatic reconnection support
+- Works through firewalls and proxies
+
+MCP can also use:
+
+- **stdio**: Standard input/output (for local processes)
+- **HTTP POST**: Traditional request/response
+- **WebSockets**: For bidirectional streaming
+
+### Message Format
+
+**JSON-RPC 2.0**:
+
+All MCP messages use JSON-RPC 2.0 format:
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "tools/call",
+  "params": {
+    "name": "get_user",
+    "arguments": {
+      "user_id": "123"
+    }
+  }
+}
+```
+
+Response:
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"id\": \"123\", \"name\": \"John Doe\"}"
+      }
+    ]
+  }
+}
+```
+
+### Tool Discovery
+
+Servers expose tool schemas that describe:
+
+- **Available functions**: What operations can be performed
+- **Required parameters**: What inputs are needed
+- **Return types**: What data is returned
+- **Descriptions**: How the AI should use each tool
+
+Example tool schema:
+
+```json
+{
+  "name": "create_order",
+  "description": "Create a new order in the system",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "product_id": {
+        "type": "string",
+        "description": "Unique product identifier"
+      },
+      "quantity": {
+        "type": "integer",
+        "minimum": 1,
+        "description": "Number of items to order"
+      }
+    },
+    "required": ["product_id", "quantity"]
+  }
+}
+```
+
+### Protocol Capabilities
+
+MCP servers can implement:
+
+- **Tools**: Functions that perform actions
+- **Resources**: Data sources to read from
+- **Prompts**: Reusable templates for AI interactions
+- **Sampling**: Request AI model completions
+
+**Learn more**: [Full MCP Specification](https://modelcontextprotocol.io/specification/2025-03-26/index)
+
+---
+
+## Scaling Your MCP Infrastructure
+
+As your usage grows, consider these scaling strategies.
+
+### Monitor Usage Metrics
+
+Track these key performance indicators:
+
+- **Request volumes**: Requests per minute/hour/day
+- **Response times**: Median and p95 latency
+- **Error rates**: Percentage of failed requests
+- **Cache hit rates**: If using caching
+- **API quota usage**: Stay below limits
+
+**Tools to use**:
+- Application Performance Monitoring (APM) tools
+- Cloud provider metrics (AWS CloudWatch, etc.)
+- Custom logging and analytics
+
+### Implement Caching Layers
+
+Reduce load on underlying APIs:
+
+- **Application-level caching**: In-memory caching (Redis, Memcached)
+- **HTTP caching**: Use Cache-Control headers
+- **CDN caching**: For static resources
+- **Database query caching**: For computed results
+
+Example caching strategy:
+
+```
+1. Check cache for result
+2. If found (cache hit):
+   - Return cached result
+   - Save API call
+3. If not found (cache miss):
+   - Call API
+   - Cache result (with TTL)
+   - Return result
+```
+
+### Use CDN for Static Resources
+
+Distribute load globally:
+
+- Serve OpenAPI specs from CDN
+- Cache API responses at edge locations
+- Reduce latency for global users
+- Improve reliability with redundancy
+
+### Plan for Rate Limits
+
+Implement queuing for high-volume operations:
+
+- **Request queuing**: Buffer requests during spikes
+- **Rate limiting**: Enforce limits to protect APIs
+- **Retry logic**: Handle temporary failures gracefully
+- **Backoff strategies**: Exponential backoff for retries
+
+### Consider Upgrading Your Tydli Plan
+
+Higher tiers offer:
+
+- Better performance and reliability
+- Higher rate limits
+- More concurrent deployments
+- Priority support
+- Advanced features
+
+[View pricing](/pricing) to compare plans.
+
+---
+
+## Advanced MCP Patterns
+
+### Resource Caching Pattern
+
+Cache expensive API calls:
+
+```typescript
+const cache = new Map();
+
+server.setRequestHandler("resources/read", async (request) => {
+  const { uri } = request.params;
+
+  // Check cache first
+  if (cache.has(uri)) {
+    return cache.get(uri);
+  }
+
+  // Fetch from API
+  const data = await fetchFromAPI(uri);
+
+  // Cache with TTL
+  cache.set(uri, data);
+  setTimeout(() => cache.delete(uri), 300000); // 5 min TTL
+
+  return data;
+});
+```
+
+### Batch Operations Pattern
+
+Combine multiple requests:
+
+```typescript
+server.setRequestHandler("tools/call", async (request) => {
+  if (request.params.name === "get_users_batch") {
+    const { user_ids } = request.params.arguments;
+
+    // Fetch all users in one API call
+    const users = await api.getUsers({ ids: user_ids });
+
+    return { content: [{ type: "text", text: JSON.stringify(users) }] };
+  }
+});
+```
+
+### Error Recovery Pattern
+
+Handle failures gracefully:
+
+```typescript
+server.setRequestHandler("tools/call", async (request) => {
+  try {
+    const result = await callAPI(request.params.arguments);
+    return { content: [{ type: "text", text: JSON.stringify(result) }] };
+  } catch (error) {
+    if (error.code === 'RATE_LIMIT') {
+      // Wait and retry
+      await sleep(1000);
+      return callAPI(request.params.arguments);
+    }
+
+    // Return helpful error
+    return {
+      content: [{
+        type: "text",
+        text: `Error: ${error.message}. Please check your parameters and try again.`
+      }],
+      isError: true
+    };
+  }
+});
+```
+
+---
+
+## Next Steps
+
+### Using Tydli
+
+For most use cases, Tydli provides everything you need:
+
+- Automatic MCP server generation from OpenAPI specs
+- Built-in authentication and security
+- Monitoring and logging
+- Easy deployment and management
+
+**Start here**: [Quickstart Guide](/quickstart)
+
+### Building Custom Servers
+
+When you need more control:
+
+- Read the [official MCP documentation](https://modelcontextprotocol.io/docs)
+- Explore [example implementations](https://github.com/modelcontextprotocol/examples)
+- Join the [MCP community Discord](https://discord.gg/modelcontextprotocol)
+
+### Combining Both
+
+You can use Tydli for simple APIs and custom servers for complex logic:
+
+- Deploy standard APIs with Tydli
+- Build custom servers for orchestration
+- Connect both to Claude Desktop
+- Get the best of both worlds
+
+---
+
+## Resources
+
+- [MCP Official Documentation](https://modelcontextprotocol.io/docs)
+- [MCP GitHub Repository](https://github.com/modelcontextprotocol)
+- [MCP Specification](https://modelcontextprotocol.io/specification/2025-03-26/index)
+- [Tydli Discord Community](https://discord.gg/tydli)
+- [Best Practices Guide](/best-practices)
