@@ -1,0 +1,95 @@
+---
+title: Core Concepts
+description: Understanding the Model Context Protocol
+icon: book-open
+---
+# Core Concepts
+
+## What is the Model Context Protocol?
+
+The **Model Context Protocol (MCP)** is an open standard created by Anthropic that enables AI systems to securely connect with external tools, data sources, and APIs.
+
+### Think of MCP as USB-C for AI
+
+Just like USB-C provides a universal standard for connecting devices, MCP provides a universal standard for AI agents to connect with external tools and APIs. One protocol, any AI system, any API.
+
+## MCP Architecture Flow
+
+The MCP ecosystem consists of three key components working together:
+
+```
+AI Host (Claude, ChatGPT, Custom Agent)
+    ↓
+MCP Client (Protocol Translator)
+    ↓
+MCP Server (Your API via Tydli)
+```
+
+### MCP Host (AI Application)
+
+The AI application that wants to use external tools - like Claude Desktop, ChatGPT, or a custom AI agent you've built.
+
+**Analogy:** Think of the Host as the "boss" who needs to delegate specific tasks to specialized workers. The boss knows what needs to be done but doesn't do the actual work.
+
+**Examples:**
+- Claude Desktop application
+- ChatGPT with custom plugins
+- Custom AI assistants built with LangChain
+- Continue.dev for VS Code
+
+### MCP Client (Protocol Bridge)
+
+The connector that speaks both languages - it translates between what the AI Host wants and what the MCP Server provides.
+
+**Analogy:** Like a translator at a business meeting. The Host speaks "AI language" and the Server speaks "API language." The Client makes sure both sides understand each other perfectly.
+
+**What it does:**
+- Discovers available tools from MCP Servers
+- Translates AI requests into proper API calls
+- Handles authentication and security
+- Manages errors and retries
+
+### MCP Server (Your API)
+
+Your actual API wrapped in MCP protocol. This is what Tydli creates for you automatically from your OpenAPI spec.
+
+**Analogy:** The specialized worker who does the actual job. When asked to "get weather data," it knows exactly how to fetch it from the weather API and return it in a format the AI can understand.
+
+**Capabilities:**
+- **Tools:** Functions that perform actions (e.g., "send_email", "get_user")
+- **Resources:** Data sources to read from (e.g., "user_database", "file_storage")
+- **Prompts:** Reusable templates (e.g., "professional_email_template")
+
+## Why MCP Changes Everything
+
+### The Problem Before MCP
+
+- ✗ Each AI system had its own custom integration format
+- ✗ Building plugins required weeks of development time
+- ✗ APIs built for one AI didn't work with others
+- ✗ Security and authentication were inconsistent
+- ✗ Maintaining multiple integrations was a nightmare
+
+### The Solution With MCP
+
+- ✓ One standard protocol works across all AI systems
+- ✓ Deploy in seconds with tools like Tydli
+- ✓ Write once, use with Claude, ChatGPT, and more
+- ✓ Built-in security and authentication patterns
+- ✓ Automatic updates without breaking changes
+
+## How Tydli Fits In
+
+Tydli automatically generates MCP Servers from your existing OpenAPI specifications. This means:
+
+1. **No code required** - Your OpenAPI spec is all you need
+2. **Instant deployment** - Get an MCP server URL in seconds
+3. **Production-ready** - Built-in authentication, rate limiting, and error handling
+4. **MCP compliant** - Follows the official Model Context Protocol 2025-03-26 specification
+
+## Next Steps
+
+- Set up your first MCP server with our [Quickstart Guide](/quickstart)
+- Learn how to [connect with Claude Desktop](/claude-desktop-setup)
+- Explore [authentication options](/authentication-methods)
+- Read about [best practices](/best-practices) for production deployments
