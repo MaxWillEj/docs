@@ -320,8 +320,8 @@ USING (has_role(auth.uid(), 'admin'));
 - URL validation and sanitization
 
 **Hybrid storage strategy**:
-- Small specs (<8,000 keys): Stored in database for fast access
-- Large specs (≥8,000 keys): Stored in file storage to avoid database limits
+- Small specs (`<8,000 keys`): Stored in database for fast access
+- Large specs (`≥8,000 keys`): Stored in file storage to avoid database limits
 - Supports enterprise APIs (e.g., Fortnox: 460 schemas, 233 endpoints)
 
 ### MCP Server Deployment
