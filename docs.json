@@ -89,7 +89,8 @@
       {
         "group": "Blog",
         "pages": [
-          "blog/12-hours-to-enterprise"
+          "blog/12-hours-to-enterprise",
+          "blog/self-syncing-docs-system"
         ]
       }
     ]

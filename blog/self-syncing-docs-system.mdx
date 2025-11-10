@@ -1,0 +1,176 @@
+---
+title: Building a Self-Syncing Documentation System
+description: >-
+  How we built an automated documentation pipeline that transforms scattered
+  markdown into beautiful, synchronized docs
+icon: newspaper
+---
+# Building a Self-Syncing Documentation System: From Chaos to Clarity in 12 Hours
+
+> **Related Reading:** For the full story behind this system—including the AI collaboration process, security incident, and what it's like to execute this migration in 12 hours—check out [12 Hours to Enterprise: AI-Powered Documentation Revolution](https://docs.tydli.io/blog/12-hours-to-enterprise).
+
+When you're building a platform like Tydli—a service that manages Model Context Protocol (MCP) servers—documentation isn't just nice to have. It's your product's front door. But here's the problem: keeping documentation beautiful, organized, and up-to-date is hard. Really hard.
+
+We recently rebuilt our entire documentation system from the ground up, transforming scattered markdown files into a polished, automatically-syncing docs platform powered by Mintlify. Here's how we did it, and more importantly, *how* it all works under the hood.
+
+## The Problem: Documentation Drift
+
+Like many engineering teams, we started with markdown files scattered across our repository. Some lived in `/docs/user/`, others in `/docs/api/`, and there were those mysterious "internal" docs that no one was quite sure if they should be public or not.
+
+The real killer? **Manual synchronization**. Every time we updated a guide, we'd have to remember to update it in multiple places—our README, our public docs site, our internal wiki. Inevitably, they'd drift out of sync. Version 1.2 would be documented in one place, 1.1 in another, and 1.3 in a third.
+
+We needed a **single source of truth** that could automatically propagate changes to a beautiful, user-facing docs site.
+
+## The Solution: Intelligent Automation
+
+We built a documentation pipeline that does something clever: it treats our GitHub repository as the authoritative source and automatically syncs changes to Mintlify (a modern docs platform) through smart content transformation.
+
+Here's what makes it interesting:
+
+### 1. Smart Content Transformation
+
+Not all documentation is created equal. Internal docs need to stay internal. Developer notes shouldn't appear in user-facing guides. Our sync system handles this automatically.
+
+We created a configuration-driven sync engine (`mintlify-sync-config.json`) with **19 sync rules** that map source files to their destinations:
+
+```
+README.md → introduction.mdx
+docs/user/QUICKSTART.md → getting-started/quickstart.mdx
+docs/api/RATE_LIMITS.md → technical-reference/rate-limits.mdx
+```
+
+But it doesn't just copy files. It **transforms** them on the fly:
+
+- **Adds metadata frontmatter** (titles, descriptions, icons for that polished look)
+- **Converts internal links** (`./AUTHENTICATION_METHODS.md` becomes `/guides/authentication-methods`)
+- **Strips HTML comments** and internal development notes
+- **Changes file extensions** (`.md` to `.mdx` for Mintlify's enhanced capabilities)
+
+### 2. Separation of Concerns
+
+We architected a clear boundary between internal and external documentation:
+
+**Public-facing** (`/docs/user/`, `/docs/api/`)
+- Guides, quickstarts, API references
+- Automatically synced to Mintlify
+- Optimized for end-users and developers
+
+**Internal** (`/docs/.internal/`)
+- Architecture decisions, investor materials, deployment checklists
+- **Never** synced—stays in the private repo
+- Organized by audience (business, operations, developers)
+
+This means engineers can document freely without worrying about accidentally exposing internal details.
+
+### 3. GitHub Actions Automation
+
+The magic happens through a GitHub Actions workflow that triggers on every push to `main`:
+
+1. **Developer updates a doc** in the Tydli repository
+2. **Commit hits main** branch
+3. **GitHub Actions spins up**, checking out both repos (source + Mintlify docs)
+4. **Sync script runs**, transforming 19+ documentation files
+5. **Creates a Pull Request** in the separate Mintlify docs repository
+6. **Team reviews** the auto-generated PR (catching broken links, formatting issues)
+7. **Merge → Deploy** Mintlify automatically publishes the updated docs
+
+The entire flow is hands-off after the initial commit. No manual copying, no remembering to update multiple places.
+
+### 4. Structured Navigation
+
+Good documentation isn't just about content—it's about **findability**. We organized everything into seven logical navigation groups:
+
+- **Getting Started** → From zero to deployed in 60 seconds
+- **Guides** → Deep dives into authentication, OAuth, best practices
+- **Support** → Troubleshooting, FAQs, getting help
+- **Advanced** → Custom MCP server development
+- **Technical Reference** → API specs, rate limits, protocol compliance
+- **Updates** → Changelog and release notes
+- **Blog** → Case studies and thought leadership
+
+Each group has a clear purpose, and the sync system automatically maintains this structure based on the configuration file.
+
+## The Technical Stack
+
+For the tech-curious, here's what powers the system:
+
+- **Node.js sync script** (303 lines of transformation logic)
+- **YAML and Gray Matter** for frontmatter parsing
+- **GitHub Actions** for CI/CD orchestration
+- **Mintlify** for the hosting platform (they handle the beautiful UI, search, and SEO)
+- **Separate repository strategy** (source in `MaxWillEj/tydliio`, docs in `MaxWillEj/docs`)
+
+The separation into two repositories is deliberate—it keeps the public docs repo clean and focused, while the main codebase can be as messy as development requires.
+
+## The Migration: 12 Hours to Enterprise-Grade Docs
+
+The most surprising part? We built this entire system in **12 hours**.
+
+Starting from scattered, inconsistent documentation, we:
+- Eliminated **1,813 lines of technical debt**
+- Created **2,200+ lines of professional documentation**
+- Built the entire sync infrastructure from scratch
+- Implemented automated workflows
+- Organized content into a logical hierarchy
+
+How? **AI-assisted development**. We used Claude (fitting, given Tydli's focus on MCP and Claude integration) to help architect the system, write the sync scripts, and even draft much of the documentation itself.
+
+## Why This Matters
+
+This isn't just about prettier docs. It's about **developer experience** and **maintenance burden**.
+
+**Before:**
+- 30+ minutes to update docs across multiple locations
+- Frequent synchronization errors
+- Anxiety about exposing internal docs
+- Docs lagging behind code changes
+
+**After:**
+- Update once in the source repo
+- Automatic sync within minutes
+- Clear public/private boundaries
+- Docs stay current with minimal effort
+
+For a small team (or even a solo developer), eliminating this friction is transformative. You actually *want* to update your docs because it's effortless.
+
+## Open Architecture Principles
+
+We followed some key principles that made this successful:
+
+1. **Single Source of Truth** → Each piece of information lives in exactly one place
+2. **Configuration Over Code** → Sync rules are declarative, not procedural
+3. **Fail Loudly** → The sync script validates everything and reports issues immediately
+4. **Review Before Deploy** → Auto-PRs mean a human always checks before going live
+
+These aren't revolutionary, but consistently applying them makes the system reliable and maintainable.
+
+## What's Next
+
+The system is live and working beautifully, but there's always room for improvement:
+
+- **Content linting** to catch common documentation mistakes
+- **Link checking** to prevent broken references
+- **Analytics integration** to see what users actually read
+- **Versioned docs** for managing multiple product versions
+
+The foundation is solid, and adding these features is now straightforward because the architecture is clean and well-defined.
+
+## Lessons Learned
+
+If you're building something similar, here are the key takeaways:
+
+1. **Invest in automation early** → Manual sync is technical debt from day one
+2. **Separate internal and public** → Future you will thank past you
+3. **Configuration-driven is flexible** → Adding new sync rules is now a 2-minute task
+4. **Use AI assistants strategically** → They excel at boilerplate and structure
+5. **Review everything** → Automation speeds you up, but humans ensure quality
+
+---
+
+The Tydli documentation system shows that with the right architecture and tools, you can have documentation that's both beautiful and effortless to maintain. It's not about working harder—it's about building systems that do the heavy lifting for you.
+
+Want to see it in action? Check out our docs at [docs.tydli.io](https://tydli.io) or explore the source code in our GitHub repository.
+
+---
+
+*This documentation system was built in 12 hours using Claude Code on November 10, 2025. The entire codebase is open source and available for teams looking to implement similar systems.*
