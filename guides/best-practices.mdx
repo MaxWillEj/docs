@@ -1,0 +1,408 @@
+---
+title: Best Practices
+description: Production-ready guidelines for Tydli deployments
+icon: badge-check
+---
+# Best Practices
+
+Production-ready guidelines for deploying and managing your Tydli MCP servers.
+
+## OpenAPI Spec Guidelines
+
+The quality of your OpenAPI specification directly impacts how well AI agents understand and use your API.
+
+### Use Clear Operation IDs
+
+**Bad:** `operation1`, `op2`, `endpoint_3`
+
+**Good:** `getUserById`, `createOrder`, `listProducts`
+
+AI agents use operation IDs to understand what each endpoint does. Make them descriptive and follow a consistent naming convention.
+
+### Add Detailed Descriptions
+
+```yaml
+paths:
+  /users/{id}:
+    get:
+      summary: "Get user by ID"
+      description: "Retrieves detailed information about a specific user including profile data, preferences, and account status. Requires authentication and read:users permission."
+      operationId: getUserById
+```
+
+AI agents use these descriptions to determine when to call your API. The more context you provide, the better.
+
+### Define All Schemas
+
+Include complete request and response schemas:
+
+```yaml
+components:
+  schemas:
+    User:
+      type: object
+      required:
+        - id
+        - email
+      properties:
+        id:
+          type: string
+          description: "Unique user identifier (UUID format)"
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        email:
+          type: string
+          format: email
+          description: "User's primary email address"
+          example: "user@example.com"
+```
+
+This helps AI agents validate requests before sending them.
+
+### Document Parameters
+
+Explain what each parameter means and provide examples:
+
+```yaml
+parameters:
+  - name: limit
+    in: query
+    description: "Maximum number of results to return (1-100). Defaults to 20."
+    required: false
+    schema:
+      type: integer
+      minimum: 1
+      maximum: 100
+      default: 20
+    example: 50
+```
+
+### Include Examples
+
+Provide example requests and responses:
+
+```yaml
+responses:
+  '200':
+    description: "Successful response"
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/User'
+        example:
+          id: "123e4567-e89b-12d3-a456-426614174000"
+          email: "user@example.com"
+          name: "Jane Doe"
+          created_at: "2024-01-15T10:30:00Z"
+```
+
+### Version Your API
+
+Use versioning in your spec to manage changes:
+
+```yaml
+openapi: 3.1.0
+info:
+  title: "My API"
+  version: "2.1.0"
+  description: "Version 2.1 adds support for batch operations"
+servers:
+  - url: https://api.example.com/v2
+    description: "Production API v2"
+```
+
+---
+
+## Security Recommendations
+
+Protect your APIs and MCP servers from unauthorized access and abuse.
+
+### Use Environment-Specific Credentials
+
+**Never use production credentials in development.**
+
+Create separate API keys for:
+- **Development**: Limited permissions, test data only
+- **Staging**: Mirror production setup with dummy data
+- **Production**: Full permissions, real data, strict monitoring
+
+### Implement Rate Limiting
+
+Protect your underlying APIs from abuse:
+
+```yaml
+# In your OpenAPI spec
+paths:
+  /users:
+    get:
+      x-rate-limit:
+        limit: 100
+        period: "1 minute"
+```
+
+Tydli respects rate limit headers from your API and can enforce additional limits.
+
+### Monitor Access Logs
+
+Review who's accessing your MCP servers regularly:
+
+- Check Tydli deployment logs for unusual patterns
+- Set up alerts for failed authentication attempts
+- Monitor for excessive API calls from single sources
+
+### Rotate Credentials Regularly
+
+Update API keys on a schedule:
+
+- **Production**: Every 90 days
+- **Development**: Every 180 days
+- **After employee departure**: Immediately
+- **After suspected compromise**: Immediately
+
+### Use Scoped Permissions
+
+Give AI agents minimum required access:
+
+**Bad:** Full admin API key with all permissions
+
+**Good:** Scoped key with only:
+- Read access to users
+- Write access to tickets
+- No access to billing or admin functions
+
+### Enable Audit Logging
+
+Track all API calls for compliance and debugging:
+
+- Log request timestamps
+- Record which tool/resource was accessed
+- Track success/failure rates
+- Monitor for data access patterns
+
+---
+
+## Performance Optimization
+
+Ensure your MCP servers respond quickly and efficiently.
+
+### Use Pagination
+
+Limit large result sets to improve response times:
+
+```yaml
+parameters:
+  - name: page
+    in: query
+    schema:
+      type: integer
+      default: 1
+  - name: per_page
+    in: query
+    schema:
+      type: integer
+      default: 20
+      maximum: 100
+```
+
+AI agents can automatically handle paginated responses when properly documented.
+
+### Implement Caching
+
+Cache frequently accessed data:
+
+- **Server-side caching**: Use Redis or similar for API responses
+- **HTTP caching headers**: Set appropriate `Cache-Control` headers
+- **Tydli caching**: Tydli can cache responses based on your headers
+
+Example:
+```yaml
+responses:
+  '200':
+    headers:
+      Cache-Control:
+        schema:
+          type: string
+        example: "public, max-age=300"  # 5 minutes
+```
+
+### Batch Operations
+
+Combine multiple requests when possible:
+
+**Instead of:**
+```
+GET /users/1
+GET /users/2
+GET /users/3
+```
+
+**Use:**
+```
+GET /users?ids=1,2,3
+```
+
+Document batch endpoints in your OpenAPI spec for AI agents to use.
+
+### Optimize Query Parameters
+
+Only request fields you need:
+
+```yaml
+parameters:
+  - name: fields
+    in: query
+    description: "Comma-separated list of fields to include"
+    schema:
+      type: string
+    example: "id,email,name"
+```
+
+This reduces response sizes and improves performance.
+
+### Monitor Response Times
+
+Track and optimize slow endpoints:
+
+- Set up performance monitoring
+- Log slow queries (>1 second)
+- Optimize database queries
+- Add indexes where needed
+- Consider read replicas for heavy read operations
+
+### Use Webhooks
+
+Avoid polling when events can push updates:
+
+**Instead of polling every minute:**
+```
+# AI checks for updates constantly
+GET /orders/status
+```
+
+**Use webhooks:**
+```
+# API posts to callback URL when order status changes
+POST https://your-webhook-endpoint/order-update
+```
+
+Document webhook configuration in your OpenAPI spec.
+
+---
+
+## MCP-Specific Best Practices
+
+### Test with MCP Inspector
+
+Before deploying, test your MCP server:
+
+```bash
+npx @modelcontextprotocol/inspector \
+  https://your-project.supabase.co/functions/v1/mcp-router/your-slug
+```
+
+This helps you verify:
+- All tools are discovered correctly
+- Parameters are properly validated
+- Responses are formatted correctly
+
+### Provide Helpful Tool Descriptions
+
+MCP tools use your OpenAPI `operationId` and `description`. Make them clear:
+
+**Bad:**
+```yaml
+operationId: "op1"
+description: "Gets stuff"
+```
+
+**Good:**
+```yaml
+operationId: "searchProducts"
+description: "Search products by name, category, or price range. Returns matching products with inventory status."
+```
+
+### Handle Errors Gracefully
+
+Return clear error messages:
+
+```yaml
+responses:
+  '400':
+    description: "Bad Request"
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            error:
+              type: string
+              example: "Invalid user ID format. Expected UUID."
+            code:
+              type: string
+              example: "INVALID_USER_ID"
+```
+
+AI agents can use these to provide better feedback to users.
+
+### Keep Deployments Updated
+
+When you update your API:
+
+1. Update your OpenAPI spec
+2. Test changes in staging Tydli deployment
+3. Update production Tydli deployment
+4. AI agents automatically see new capabilities
+
+No need to update Claude Desktop config - MCP handles discovery automatically.
+
+---
+
+## Monitoring & Maintenance
+
+### Health Checks
+
+Regularly verify your MCP server:
+
+- Check Tydli dashboard for deployment status
+- Monitor error rates in logs
+- Test critical endpoints manually
+- Set up uptime monitoring
+
+### Performance Metrics
+
+Track these key metrics:
+
+- **Response time**: Median and p95 latency
+- **Error rate**: Percentage of failed requests
+- **Request volume**: Requests per minute/hour/day
+- **Cache hit rate**: If using caching
+
+### Alerting
+
+Set up alerts for:
+
+- Deployment failures
+- High error rates (>5%)
+- Slow responses (>2 seconds)
+- Authentication failures
+- Rate limit exceeded
+
+### Regular Reviews
+
+Monthly checklist:
+
+- [ ] Review access logs for unusual patterns
+- [ ] Check error logs and fix common issues
+- [ ] Update OpenAPI spec documentation
+- [ ] Rotate API credentials
+- [ ] Review and optimize slow endpoints
+- [ ] Update AI agent prompts if needed
+- [ ] Test critical user journeys
+
+---
+
+## Next Steps
+
+- Review our [Security Best Practices](../operations/SECURITY_BEST_PRACTICES.md) for additional security guidance
+- Check [Rate Limits](../api/RATE_LIMITS.md) for quota information
+- See [MCP Compliance](../api/MCP_COMPLIANCE.md) for protocol details
+- Join our [Discord](https://discord.gg/tydli) for community best practices
