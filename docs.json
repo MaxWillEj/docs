@@ -17,8 +17,8 @@
   "navbar": {
     "links": [
       {
-        "label": "Your Dashboard",
-        "href": "https://tydli.io/dashboard"
+        "label": "MCP Server Marketplace",
+        "href": "https://tydli.io/explore"
       }
     ],
     "primary": {
