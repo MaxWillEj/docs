@@ -1,0 +1,121 @@
+---
+title: Claude Desktop Setup
+description: Connect your MCP server to Claude Desktop
+icon: desktop
+---
+# Claude Desktop Setup Guide
+
+After deploying your MCP server on Tydli, follow these steps to connect it with Claude Desktop.
+
+## Step 1: Copy Your MCP Server URL
+
+After your deployment completes on Tydli, you'll see a "Server URL" in your deployment details. It looks like:
+
+```
+https://your-project.supabase.co/functions/v1/mcp-router/your-deployment-slug
+```
+
+Make sure to copy the complete URL including your deployment slug.
+
+## Step 2: Open Claude Desktop Settings
+
+1. Launch Claude Desktop application
+2. Click on your profile icon in the top right
+3. Select **Settings** from the dropdown
+4. Navigate to **Developer** tab
+5. Click **Edit Config** button
+
+## Step 3: Add Your MCP Server Configuration
+
+This opens the `claude_desktop_config.json` file. Add your server configuration:
+
+```json
+{
+  "mcpServers": {
+    "my-api": {
+      "url": "https://your-project.supabase.co/functions/v1/mcp-router/your-deployment-slug",
+      "transport": "sse",
+      "auth": {
+        "type": "bearer",
+        "token": "YOUR_TYDLI_AUTH_TOKEN"
+      }
+    }
+  }
+}
+```
+
+**Configuration fields explained:**
+- `my-api`: Give your MCP server a descriptive name
+- `url`: Your complete Tydli MCP server URL
+- `transport`: Use `"sse"` (Server-Sent Events)
+- `auth.type`: Authentication type (`"bearer"` for Tydli)
+- `auth.token`: Your authentication token from Tydli
+
+## Step 4: Restart Claude Desktop
+
+Close and reopen Claude Desktop. Your MCP server will now be available!
+
+## Step 5: Test Your Integration
+
+Start a new conversation in Claude and try asking it to use your API:
+
+> "Can you list all the endpoints available in my API?"
+
+Claude should respond with information about your API's capabilities!
+
+## Troubleshooting Tips
+
+If you're having issues connecting:
+
+- **Check server status**: Make sure your MCP server status is "Ready" in your Tydli dashboard
+- **Verify the URL**: Ensure you've copied the complete URL including the deployment slug
+- **Check auth token**: Verify your auth token is correctly configured and not expired
+- **Console errors**: Look for connection errors in Claude Desktop's developer console
+- **Restart required**: Always restart Claude Desktop after config changes
+
+## Advanced Configuration
+
+### Multiple MCP Servers
+
+You can add multiple MCP servers to the same configuration:
+
+```json
+{
+  "mcpServers": {
+    "my-api": {
+      "url": "https://your-project.supabase.co/functions/v1/mcp-router/api-1",
+      "transport": "sse",
+      "auth": {
+        "type": "bearer",
+        "token": "TOKEN_1"
+      }
+    },
+    "another-api": {
+      "url": "https://your-project.supabase.co/functions/v1/mcp-router/api-2",
+      "transport": "sse",
+      "auth": {
+        "type": "bearer",
+        "token": "TOKEN_2"
+      }
+    }
+  }
+}
+```
+
+### Testing with MCP Inspector
+
+For debugging, you can use the MCP Inspector tool:
+
+```bash
+npx @modelcontextprotocol/inspector \
+  https://your-project.supabase.co/functions/v1/mcp-router/your-deployment-slug
+```
+
+This will open a web interface where you can test your MCP server's tools and resources.
+
+## Next Steps
+
+- Learn about [Authentication Methods](/authentication-methods) to secure your APIs
+- Review [Best Practices](/best-practices) for production deployments
+- Explore [Real-World Use Cases](/use-cases) for inspiration
+- Check [Troubleshooting Guide](/troubleshooting) for common issues
