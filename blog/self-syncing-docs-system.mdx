@@ -11,7 +11,7 @@ icon: newspaper
 
 When you're building a platform like Tydli—a service that manages Model Context Protocol (MCP) servers—documentation isn't just nice to have. It's your product's front door. But here's the problem: keeping documentation beautiful, organized, and up-to-date is hard. Really hard.
 
-We recently rebuilt our entire documentation system from the ground up, transforming scattered markdown files into a polished, automatically-syncing docs platform powered by Mintlify. Here's how we did it, and more importantly, *how* it all works under the hood.
+We recently rebuilt our entire documentation system from the ground up, transforming scattered markdown files into a polished, automatically-syncing docs platform powered by Mintlify. Here's how we did it, and more importantly, _how_ it all works under the hood.
 
 ## The Problem: Documentation Drift
 
@@ -51,11 +51,13 @@ But it doesn't just copy files. It **transforms** them on the fly:
 We architected a clear boundary between internal and external documentation:
 
 **Public-facing** (`/docs/user/`, `/docs/api/`)
+
 - Guides, quickstarts, API references
 - Automatically synced to Mintlify
 - Optimized for end-users and developers
 
 **Internal** (`/docs/.internal/`)
+
 - Architecture decisions, investor materials, deployment checklists
 - **Never** synced—stays in the private repo
 - Organized by audience (business, operations, developers)
@@ -107,6 +109,7 @@ The separation into two repositories is deliberate—it keeps the public docs re
 The most surprising part? We built this entire system in **12 hours**.
 
 Starting from scattered, inconsistent documentation, we:
+
 - Eliminated **1,813 lines of technical debt**
 - Created **2,200+ lines of professional documentation**
 - Built the entire sync infrastructure from scratch
@@ -120,18 +123,20 @@ How? **AI-assisted development**. We used Claude (fitting, given Tydli's focus o
 This isn't just about prettier docs. It's about **developer experience** and **maintenance burden**.
 
 **Before:**
+
 - 30+ minutes to update docs across multiple locations
 - Frequent synchronization errors
 - Anxiety about exposing internal docs
 - Docs lagging behind code changes
 
 **After:**
+
 - Update once in the source repo
 - Automatic sync within minutes
 - Clear public/private boundaries
 - Docs stay current with minimal effort
 
-For a small team (or even a solo developer), eliminating this friction is transformative. You actually *want* to update your docs because it's effortless.
+For a small team (or even a solo developer), eliminating this friction is transformative. You actually _want_ to update your docs because it's effortless.
 
 ## Open Architecture Principles
 
@@ -173,4 +178,4 @@ Want to see it in action? Check out our docs at [docs.tydli.io](https://tydli.io
 
 ---
 
-*This documentation system was built in 12 hours using Claude Code on November 10, 2025. The entire codebase is open source and available for teams looking to implement similar systems.*
+_This documentation system was built in 12 hours using Claude Code on November 9, 2025. The entire codebase is open source and available for teams looking to implement similar systems._
