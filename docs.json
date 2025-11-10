@@ -32,14 +32,6 @@
   },
   "tabs": [
     {
-      "name": "API Reference",
-      "url": "api-reference"
-    },
-    {
-      "name": "Developers",
-      "url": "developers"
-    },
-    {
       "name": "Resources",
       "url": "resources"
     }
@@ -67,31 +59,10 @@
         ]
       },
       {
-        "group": "API Overview",
-        "pages": [
-          "api-reference/overview",
-          "api-reference/rate-limits"
-        ]
-      },
-      {
         "group": "Technical Reference",
         "pages": [
-          "api-reference/database-schema",
-          "api-reference/mcp-compliance"
-        ]
-      },
-      {
-        "group": "Development",
-        "pages": [
-          "developers/architecture",
-          "developers/developer-guide"
-        ]
-      },
-      {
-        "group": "Operations",
-        "pages": [
-          "operations/security",
-          "operations/monitoring"
+          "api-reference/mcp-compliance",
+          "api-reference/rate-limits"
         ]
       },
       {
@@ -134,7 +105,7 @@
     }
   ],
   "api": {
-    "baseUrl": "https://nqfciqtsrcjorlqcglmq.supabase.co/functions/v1",
+    "baseUrl": "https://api.tydli.io",
     "playground": {
       "display": "interactive"
     }
