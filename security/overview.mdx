@@ -1,0 +1,572 @@
+---
+title: Security at Tydli.io
+description: >-
+  Comprehensive security documentation covering credential encryption,
+  authentication, RLS policies, and audit trails
+icon: shield-halved
+---
+# Security at Tydli.io
+
+> **TL;DR**: Your API credentials are encrypted with AES-256-GCM, stored server-side only, protected by military-grade access controls, and never touch client-side JavaScript. We've built this platform with the same security standards you'd expect from enterprise API management tools.
+
+---
+
+## Why Security Matters for MCP Servers
+
+When you deploy an MCP server through Tydli.io, you're essentially creating a bridge between AI assistants and your business APIs. This means we handle:
+
+- **API credentials** (keys, tokens, OAuth secrets)
+- **Request routing** (AI → Your API)
+- **Authentication flows** (OAuth 2.1, JWT, API keys)
+
+Each of these represents a potential security risk if not handled correctly. Here's exactly how we protect you.
+
+---
+
+## Core Security Principles
+
+### 1. Zero Trust Architecture
+
+**What it means**: We assume every request is hostile until proven otherwise.
+
+**How we implement it**:
+- Every database query is protected by Row-Level Security (RLS) policies
+- Users can only access their own deployments, credentials, and logs
+- Even our own backend services use the principle of least privilege
+- Service role access is logged and audited
+
+**What this prevents**:
+- User A cannot view User B's API credentials
+- Leaked database credentials don't automatically leak user data
+- Compromised frontend code cannot bypass backend security
+
+---
+
+### 2. Defense in Depth
+
+**What it means**: Multiple layers of security, so if one fails, others catch it.
+
+**How we implement it**:
+
+#### Layer 1: Input Validation
+- All API requests validated using Zod schemas before processing
+- Maximum payload sizes enforced (5MB for OpenAPI specs)
+- URL parameters sanitized to prevent injection attacks
+- Structured error codes prevent information leakage
+
+#### Layer 2: Authentication & Authorization
+- JWT tokens for user sessions (1-hour TTL)
+- Email verification required before dashboard access
+- Account lockouts after 5 failed login attempts (progressive: 15 min → 1 hour → 24 hours)
+- OAuth 2.1 with PKCE for third-party API access
+
+#### Layer 3: Data Protection
+- API credentials encrypted with AES-256-GCM before storage
+- Encryption keys stored separately from encrypted data
+- Credentials never sent to client-side JavaScript
+- Dedicated edge function for credential retrieval (rate-limited to 5 requests/minute)
+
+#### Layer 4: Network Security
+- All connections use HTTPS/TLS 1.3
+- CORS policies enforced on all edge functions
+- Rate limiting at multiple levels (hourly, monthly, per-deployment)
+- IP-based tracking for security events
+
+#### Layer 5: Audit & Monitoring
+- All security events logged (`security_events` table)
+- Failed login attempts tracked (`login_attempts` table)
+- Credential access logged with IP/user-agent (`deployment_secret_access_log` table)
+- Tool invocations logged for debugging and security analysis
+
+---
+
+## How We Protect Your API Credentials
+
+### The Problem with Client-Side Storage
+
+Many platforms store API keys in local storage or environment variables that load in the browser. This means:
+- ❌ Keys visible in browser DevTools
+- ❌ Keys captured by session recording tools
+- ❌ Keys leaked via XSS attacks
+- ❌ Keys accessible to malicious browser extensions
+
+### Our Solution: Server-Side Only
+
+**Your credentials never touch the client**:
+
+1. **Upload**: When you provide API credentials, they're sent directly to our edge function via HTTPS
+2. **Encryption**: Immediately encrypted using AES-256-GCM with a server-side encryption key
+3. **Storage**: Encrypted blob stored in database with RLS policies enforcing ownership
+4. **Usage**: When your MCP server needs credentials, it requests them from a dedicated edge function
+5. **Retrieval**: Edge function decrypts server-side, verifies ownership, logs access, and returns credentials only to authenticated backend services
+
+**What this means for you**:
+- ✅ No keys in browser memory
+- ✅ No keys in network traffic (except during initial upload, protected by TLS)
+- ✅ No keys in frontend build artifacts
+- ✅ Complete audit trail of who accessed what and when
+
+### Encryption Details
+
+**Algorithm**: AES-256-GCM (Galois/Counter Mode)
+- **Key size**: 256 bits (industry standard for sensitive data)
+- **Mode**: GCM provides both encryption and authentication
+- **Why GCM?**: Detects tampering attempts, prevents replay attacks
+
+**Key management**:
+- Encryption keys stored in Supabase secrets (never in code)
+- Keys rotated independently from data (allows credential re-encryption)
+- Each deployment's credentials encrypted separately
+
+---
+
+## Authentication & Access Control
+
+### User Authentication
+
+**Email verification required**:
+- New signups must verify email before accessing dashboard
+- Automatic sign-out after signup prevents "logged in but unverified" state
+- Verification tokens expire after 24 hours
+- Built-in rate limiting on resend verification (prevents spam)
+
+**Password security**:
+- Managed by Supabase Auth (battle-tested authentication system)
+- Passwords never stored in plaintext
+- JWT tokens for session management (1-hour TTL)
+- Refresh tokens for extended sessions
+
+**Account protection**:
+- Failed login attempts tracked by email and IP
+- Progressive lockouts: 5 attempts = 15 min, 10 = 1 hour, 15+ = 24 hours
+- Rate limit checking before authentication (prevents brute force)
+- Lockout bypass requires waiting or admin intervention
+
+### OAuth 2.1 for Third-Party APIs
+
+When your MCP server needs to access third-party APIs on behalf of users:
+
+**Why OAuth 2.1?**
+- Users grant permissions without sharing passwords
+- Tokens can be revoked independently
+- Scopes limit what the MCP server can access
+- Industry standard for API authorization
+
+**Our implementation**:
+- **PKCE required** (Proof Key for Code Exchange) - prevents authorization code interception
+- **State parameter** - prevents CSRF attacks
+- **Token hashing** - refresh tokens stored as SHA-256 hashes, not plaintext
+- **Token rotation** - old refresh tokens invalidated on use
+- **Expiration tracking** - access tokens (1 hour), refresh tokens (30 days), authorization codes (5 minutes)
+
+**Security guarantees**:
+- Authorization codes single-use only
+- Redirect URI validation prevents token theft
+- Client secrets never sent to frontend
+- Token exchange requires client authentication
+
+---
+
+## Row-Level Security (RLS)
+
+Every table in our database has RLS policies. This means:
+
+**Users can only access their own data**:
+```sql
+-- Example: deployments table
+CREATE POLICY "Users can view their own deployments"
+ON deployments FOR SELECT
+USING (auth.uid() = user_id);
+```
+
+**Gallery templates are public**:
+```sql
+-- Example: approved gallery items are viewable by everyone
+CREATE POLICY "Anyone can view gallery template deployments"
+ON deployments FOR SELECT
+USING (is_gallery_template = true);
+```
+
+**Admins have elevated access**:
+```sql
+-- Example: admins can view all deployments for moderation
+CREATE POLICY "Admins can view all deployments"
+ON deployments FOR SELECT
+USING (has_role(auth.uid(), 'admin'));
+```
+
+**What this prevents**:
+- SQL injection attacks cannot bypass ownership checks
+- Compromised API keys don't grant access to other users' data
+- Even with direct database access, users only see their own records
+
+---
+
+## Rate Limiting & Abuse Prevention
+
+### User-Level Rate Limits
+
+**Why it matters**: Prevents account takeovers, credential stuffing, API abuse
+
+**Our implementation**:
+- Hourly request limits (default: 250 requests/hour)
+- Monthly request limits (default: 1,500 requests/month)
+- Deployment creation limits (default: 3 active deployments)
+- Endpoint limits per deployment (default: 50 endpoints)
+
+**Progressive throttling**:
+- At 80% of limit: Warning logged to security events
+- At 100% of limit: Requests blocked with 429 error
+- User notified with clear guidance on upgrading
+
+### OAuth-Specific Rate Limits
+
+**Token endpoint**: 10 requests/minute per client
+**Authorization endpoint**: 20 requests/minute per client
+**Prevents**: Brute force attacks on OAuth flows
+
+### Gallery Deployment Rate Limits
+
+**Why it matters**: Prevents abuse of one-click deployments
+
+**Our implementation**:
+- Per-user limits: 5 deployments/hour, 20 deployments/day (Free plan)
+- Prevents automated scraping of gallery templates
+- Ensures fair resource allocation
+
+---
+
+## Audit Trails & Monitoring
+
+### What We Log
+
+**Security events** (`security_events` table):
+- Login attempts (success/failure)
+- Token rotations
+- Rate limit warnings/violations
+- Suspicious activity detection
+- Security dashboard access
+
+**Credential access** (`deployment_secret_access_log` table):
+- When credentials are retrieved
+- Who requested them (user_id)
+- From where (IP address, user agent)
+- What secrets were accessed (jwt_token, api_key)
+- Request correlation ID
+
+**API invocations** (`tool_invocation_logs` table):
+- Which MCP tool was called
+- API method and URL
+- Response status and execution time
+- Success/failure with error messages
+- User ownership tracking
+
+### What This Means for You
+
+**Forensics**: If something goes wrong, we can trace exactly what happened
+**Compliance**: Complete audit trail for SOC 2, GDPR, etc.
+**Transparency**: You can view your own security events in the dashboard
+**Detection**: Anomaly patterns trigger automatic security logging
+
+---
+
+## Data Privacy
+
+### What We Store
+
+**User data**:
+- Email address (for authentication)
+- Display name (optional)
+- Security events (for audit trail)
+
+**Deployment data**:
+- OpenAPI specifications (your API schemas)
+- Encrypted credentials (your API keys/tokens)
+- Deployment configurations (auth methods, customizations)
+- Usage metrics (request counts, timestamps)
+
+**Logs**:
+- Tool invocations (what tools were called)
+- Security events (login attempts, rate limits)
+- Deployment logs (generation status, errors)
+
+### What We DON'T Store
+
+- ❌ API request/response payloads (we're a router, not a logger)
+- ❌ Plaintext credentials (always encrypted)
+- ❌ Personally identifiable information from your APIs
+- ❌ Conversation history between users and AI assistants
+
+### Data Retention
+
+- **Active deployments**: Indefinitely (while your account is active)
+- **Logs**: 90 days (automatic cleanup via scheduled jobs)
+- **OAuth tokens**: Until expiration or revocation
+- **Security events**: 90 days
+
+---
+
+## Deployment Security
+
+### OpenAPI Spec Validation
+
+**Why it matters**: Malicious specs could cause DoS or expose internal systems
+
+**Our validation**:
+- Maximum spec size: 5MB
+- Maximum depth: 20 levels (prevents stack overflow)
+- Circular reference detection
+- Schema key count tracking (prevents database limits)
+- URL validation and sanitization
+
+**Hybrid storage strategy**:
+- Small specs (<8,000 keys): Stored in database for fast access
+- Large specs (≥8,000 keys): Stored in file storage to avoid database limits
+- Supports enterprise APIs (e.g., Fortnox: 460 schemas, 233 endpoints)
+
+### MCP Server Deployment
+
+**Isolation**: Each deployment runs independently
+- Cannot access other users' deployments
+- Cannot query other users' credentials
+- Cannot bypass rate limits
+
+**Secrets management**:
+- JWT tokens generated per deployment
+- API keys unique per deployment
+- Secrets rotatable without redeployment
+
+---
+
+## Incident Response
+
+### If You Suspect a Security Issue
+
+**DO**:
+1. Email us immediately at **security@tydli.io**
+2. Rotate your API credentials in the original API provider
+3. Revoke OAuth tokens if using OAuth
+4. Check your security events log for suspicious activity
+
+**DON'T**:
+- Publicly disclose the issue before we've had a chance to investigate
+- Continue using compromised credentials
+
+### Our Commitment
+
+- **Response time**: Within 24 hours for security reports
+- **Fix timeline**: Critical vulnerabilities patched within 48 hours
+- **Disclosure**: We'll inform affected users promptly
+- **Transparency**: Post-mortem published for significant incidents
+
+---
+
+## Compliance & Standards
+
+### What We Follow
+
+**OWASP Top 10**: Our architecture addresses all major web security risks
+**OAuth 2.1**: Latest security best practices for third-party authorization
+**NIST Encryption Standards**: AES-256-GCM for data at rest
+**TLS 1.3**: Industry standard for data in transit
+
+### Future Certifications
+
+We're committed to pursuing formal certifications as we grow:
+- SOC 2 Type II (security, availability, confidentiality)
+- ISO 27001 (information security management)
+- GDPR compliance (data protection and privacy)
+
+---
+
+## Technical Details for Security Auditors
+
+### Database Security
+
+**PostgreSQL with RLS**:
+- Version: 15+ (latest stable)
+- All tables protected by RLS policies
+- Service role usage logged and audited
+- Foreign keys enforce referential integrity
+- Indexes on security-critical columns (user_id, deployment_id)
+
+**Backup & Recovery**:
+- Managed by Supabase (encrypted backups)
+- Point-in-time recovery available
+- Disaster recovery plan documented
+
+### Edge Function Security
+
+**Deno runtime**:
+- Sandboxed execution (no file system access by default)
+- TypeScript for type safety
+- Secure-by-default APIs
+
+**Security patterns**:
+- Zod schemas for all request validation
+- Structured error responses (TydliError type)
+- CORS validation on all endpoints
+- Rate limiting implemented at function level
+- Service role access controlled and logged
+
+### Authentication Flow
+
+**User signup**:
+```
+1. User submits email + password
+2. Supabase Auth creates user record
+3. Verification email sent
+4. User signs out immediately (prevents unverified access)
+5. User verifies email via link
+6. User logs in → JWT token issued
+7. Dashboard access granted
+```
+
+**Token lifecycle**:
+```
+Access token: 1 hour TTL
+Refresh token: 30 days TTL
+Session: Maintained via refresh token
+Expiration: Automatic logout, re-authentication required
+```
+
+### Credential Storage Flow
+
+**Encryption**:
+```
+1. User provides credentials (HTTPS POST)
+2. Edge function receives credentials
+3. Validate user ownership of deployment
+4. Generate encryption key (if not exists)
+5. Encrypt using AES-256-GCM
+6. Store encrypted blob in api_credentials table
+7. Log encryption event to security_events
+8. Return success (no plaintext in response)
+```
+
+**Decryption** (server-side only):
+```
+1. MCP server requests credentials
+2. Edge function validates authentication
+3. Verify deployment ownership
+4. Check rate limit (5 req/min)
+5. Retrieve encrypted blob
+6. Decrypt using server-side key
+7. Log access to deployment_secret_access_log
+8. Return plaintext to backend service only
+```
+
+---
+
+## FAQ
+
+### Q: Can Tydli.io employees see my API credentials?
+
+**A**: No. Your credentials are encrypted using AES-256-GCM with encryption keys stored separately. Even with database access, employees would see encrypted blobs, not plaintext credentials. Decryption requires the encryption key, which is only accessible to the production edge functions.
+
+### Q: What happens if Tydli.io is compromised?
+
+**A**: Defense in depth means multiple layers must fail:
+1. Attacker would need database access (protected by authentication)
+2. AND the encryption keys (stored separately in Supabase secrets)
+3. AND bypass RLS policies (enforced at database level)
+4. AND evade audit logging (would be detected)
+
+Even in this scenario, your credentials in the original API provider (e.g., Stripe, GitHub) remain safe. You can rotate those keys to invalidate any stolen credentials.
+
+### Q: How do you prevent AI from leaking sensitive data?
+
+**A**: We never send your API credentials to AI assistants. The MCP server acts as a secure proxy:
+1. AI sends request to MCP server: "Get customer list"
+2. MCP server translates to API call: `GET /customers`
+3. MCP server retrieves credentials (server-side)
+4. MCP server calls your API with credentials
+5. MCP server returns sanitized results to AI
+6. AI never sees credentials, only business data
+
+The AI assistant operates at the "tool call" level, not the "API call" level.
+
+### Q: What if I lose access to my Tydli.io account?
+
+**A**: Your credentials are tied to your user account. If you lose access:
+1. Use account recovery (email-based)
+2. If recovery fails, contact support with proof of ownership
+3. As a last resort, rotate keys in your original API provider
+
+This is why we recommend documenting which MCP servers use which API credentials.
+
+### Q: Are my OpenAPI specs visible to other users?
+
+**A**: No, unless you explicitly publish them as gallery templates. Regular deployments are private and protected by RLS policies. Only you (and admins for moderation) can view your deployments.
+
+### Q: How do gallery templates work securely?
+
+**A**: Gallery templates are pre-configured MCP servers without credentials. When you deploy from the gallery:
+1. A new deployment is created in YOUR account
+2. YOU provide API credentials
+3. Credentials are encrypted and stored separately
+4. Original template remains public, your instance remains private
+
+### Q: Can I self-host Tydli.io for extra security?
+
+**A**: Not currently, but we're exploring enterprise self-hosting options. If this is critical for your organization, contact us to discuss requirements.
+
+---
+
+## Comparison with Alternatives
+
+### Building Your Own MCP Server
+
+**Security considerations**:
+- ❌ You handle credential storage (easy to get wrong)
+- ❌ You implement rate limiting (often forgotten)
+- ❌ You maintain audit logs (complex to build)
+- ❌ You secure the deployment (server hardening required)
+
+**Tydli.io advantage**:
+- ✅ Battle-tested credential encryption
+- ✅ Built-in rate limiting at multiple levels
+- ✅ Comprehensive audit trails
+- ✅ Managed infrastructure with security updates
+
+### Using API Keys in AI Assistant Configs
+
+Some platforms let you paste API keys directly into AI assistant settings.
+
+**Security risks**:
+- ❌ Keys stored in plaintext configuration files
+- ❌ Keys synced across devices (more exposure)
+- ❌ No rate limiting (can exhaust API quotas)
+- ❌ No audit trail (can't track usage)
+
+**Tydli.io advantage**:
+- ✅ Keys never stored client-side
+- ✅ Centralized credential management
+- ✅ Per-deployment rate limits
+- ✅ Complete usage visibility
+
+---
+
+## Conclusion
+
+Security is not a feature—it's a foundation. We've built Tydli.io with the same security standards used by enterprise API management platforms because we believe everyone deserves production-grade security, not just large companies.
+
+**Core guarantees**:
+- 🔒 Your credentials are encrypted with military-grade encryption
+- 🚫 Your credentials never touch client-side JavaScript
+- 👤 Your data is isolated via Row-Level Security
+- 📊 Every security event is logged and auditable
+- 🛡️ Multiple layers of defense protect against attacks
+
+**Transparency commitment**:
+- We document our security practices publicly
+- We respond to security reports within 24 hours
+- We publish post-mortems for significant incidents
+- We maintain a public security roadmap
+
+If you have questions or concerns about security, we're here to help: **security@tydli.io**
+
+---
+
+*Last updated: 2025-01-10*  
+*Security documentation version: 1.0*

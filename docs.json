@@ -59,6 +59,12 @@
         ]
       },
       {
+        "group": "Security",
+        "pages": [
+          "security/overview"
+        ]
+      },
+      {
         "group": "Support",
         "pages": [
           "support/common-issues",
