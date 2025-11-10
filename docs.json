@@ -85,6 +85,12 @@
         "pages": [
           "resources/changelog"
         ]
+      },
+      {
+        "group": "Blog",
+        "pages": [
+          "blog/12-hours-to-enterprise"
+        ]
       }
     ]
   },
