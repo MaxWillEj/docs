@@ -17,14 +17,14 @@
   "navbar": {
     "links": [
       {
-        "label": "Dashboard",
-        "href": "https://tydli.io"
+        "label": "Your Dashboard",
+        "href": "https://tydli.io/dashboard"
       }
     ],
     "primary": {
       "type": "button",
       "label": "Get Started",
-      "href": "https://tydli.io"
+      "href": "https://tydli.io/auth?tab=signup"
     }
   },
   "primaryTab": {
