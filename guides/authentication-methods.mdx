@@ -1,0 +1,204 @@
+---
+title: Authentication Methods
+description: Configure API authentication for your MCP servers
+icon: key
+---
+# Authentication Methods
+
+Tydli supports all standard API authentication methods. Here's how to configure each one for your MCP deployments.
+
+## API Key Authentication
+
+The simplest authentication method. Your API key is sent with every request, typically in a header.
+
+### When to Use
+
+- Simple REST APIs without complex auth flows
+- Internal APIs with static keys
+- Services like Stripe, SendGrid, OpenAI
+
+### Configuration Example
+
+```
+Header Name: X-API-Key
+Header Value: your_api_key_here
+```
+
+### Common Header Names
+
+- `X-API-Key`
+- `Authorization: Bearer <token>`
+- `X-Auth-Token`
+- `api-key`
+
+### Example Services
+
+- **Stripe**: Uses `Authorization: Bearer sk_live_...`
+- **SendGrid**: Uses `Authorization: Bearer SG.xxx`
+- **OpenAI**: Uses `Authorization: Bearer sk-...`
+
+---
+
+## OAuth 2.0
+
+Industry-standard protocol for secure authorization. Allows temporary, scoped access without sharing passwords.
+
+### When to Use
+
+- APIs that require user authorization (Google, GitHub, Salesforce)
+- When you need different permission levels
+- Production applications handling user data
+
+### Configuration Fields
+
+- **`client_id`**: Your application identifier
+- **`client_secret`**: Your application secret key
+- **`token_url`**: Endpoint to exchange code for token
+- **`scope`**: Requested permissions (optional)
+
+### Example Configuration
+
+```json
+{
+  "auth_type": "oauth2",
+  "client_id": "your-client-id",
+  "client_secret": "your-client-secret",
+  "token_url": "https://api.example.com/oauth/token",
+  "scope": "read:users write:data"
+}
+```
+
+### How Tydli Handles OAuth
+
+**Token Refresh**: Tydli handles token refresh automatically. Just provide initial credentials and we manage the rest.
+
+**Secure Storage**: OAuth credentials are encrypted and never exposed to end users.
+
+**Automatic Renewal**: Tokens are refreshed before expiration to ensure uninterrupted service.
+
+---
+
+## Basic Authentication
+
+Simple username and password authentication. Credentials are base64-encoded and sent in the Authorization header.
+
+### When to Use
+
+- Legacy or internal APIs
+- Simple services without OAuth support
+- Development and testing environments
+
+### Configuration Example
+
+```
+Username: admin@example.com
+Password: your-secure-password
+
+Sent as: Authorization: Basic YWRtaW5AZXhhbXBsZS5jb206eW91ci1zZWN1cmUtcGFzc3dvcmQ=
+```
+
+### Security Note
+
+**Always use Basic Auth over HTTPS.** Tydli encrypts your credentials at rest and in transit.
+
+---
+
+## Custom Headers
+
+For APIs with proprietary authentication schemes or additional required headers.
+
+### When to Use
+
+- APIs with custom authentication schemes
+- Services requiring multiple authentication headers
+- Special tracking or versioning headers
+
+### Example Use Cases
+
+**Multiple auth tokens:**
+```
+X-Auth-Token: primary-token-here
+X-Secondary-Token: secondary-token-here
+```
+
+**API versioning:**
+```
+Accept: application/vnd.api+json; version=2
+Authorization: Bearer your-token-here
+```
+
+**Custom tracking:**
+```
+X-Request-ID: unique-request-id
+X-Client-Version: 1.2.3
+Authorization: Bearer your-token-here
+```
+
+---
+
+## Security Best Practices
+
+Tydli implements multiple layers of security for your API credentials:
+
+### Encryption at Rest
+- All credentials are encrypted using **AES-256 encryption**
+- Stored securely in encrypted database fields
+- Never accessible in plain text
+
+### Server-Side Execution
+- API requests are made **server-side**, never exposing credentials to clients
+- Credentials never sent to browsers or client applications
+- All requests proxied through Tydli's secure infrastructure
+
+### Credential Management
+- Credentials are **never logged** or displayed after initial setup
+- Masked in all UI displays
+- Automatic credential rotation support
+
+### Environment Best Practices
+- Use **environment-specific credentials** (dev, staging, production)
+- Implement different keys for different deployment stages
+- Test with sandbox credentials before production
+
+### Rotation & Monitoring
+- **Rotate API keys regularly** according to your security policy
+- Monitor your Tydli deployment logs for unauthorized access attempts
+- Set up alerts for suspicious authentication patterns
+
+### Least Privilege
+- Use **scoped permissions** when possible (OAuth scopes, API key permissions)
+- Grant only the minimum access required for your use case
+- Regularly audit and remove unused credentials
+
+## Troubleshooting Authentication
+
+### 401 Unauthorized Errors
+
+**Possible causes:**
+- Incorrect API key or token
+- Expired OAuth token
+- Wrong header name or format
+
+**Solutions:**
+- Verify credentials are correctly entered
+- Check if token has expired (OAuth tokens)
+- Confirm header name matches API requirements
+
+### 403 Forbidden Errors
+
+**Possible causes:**
+- Valid credentials but insufficient permissions
+- IP address restrictions
+- Rate limiting
+
+**Solutions:**
+- Check API key scopes/permissions
+- Verify your IP is allowed (if API has IP restrictions)
+- Review rate limit status
+
+## Next Steps
+
+- Review [Best Practices](/best-practices) for security recommendations
+- Learn about [Rate Limits](../api/RATE_LIMITS.md) and quotas
+- Check [Troubleshooting Guide](/troubleshooting) for common auth issues
+- Explore [OAuth Integration Guide](/oauth-integration-guide) for detailed OAuth setup
