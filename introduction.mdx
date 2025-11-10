@@ -21,7 +21,7 @@ icon: rocket
 ## How It Works
 
 1. **Upload API Specs** - Upload/paste/URL or AI-process documents (PDF, DOCX, etc.)
-2. **Validate** - Automatic OpenAPI 3.0+ validation with auth detection  
+2. **Validate** - Automatic OpenAPI 3.0+ validation with auth detection
 3. **Configure** - Set API credentials and MCP authentication method
 4. **Deploy** - Generate MCP server registered in `mcp_server_registry`
 5. **Connect** - Use OAuth or JWT to connect AI agents
@@ -29,6 +29,7 @@ icon: rocket
 ## Technical Stack
 
 ### Frontend
+
 - React 18 + TypeScript 5
 - Tailwind CSS with custom design system
 - shadcn-ui components
@@ -37,6 +38,7 @@ icon: rocket
 - React Dropzone for file uploads
 
 ### Backend (Supabase)
+
 - PostgreSQL 15+ with Row Level Security (20 tables)
 - Edge Functions (Deno runtime, 14 functions)
 - Supabase Auth with email verification
@@ -54,20 +56,6 @@ icon: rocket
 3. **Upload API Spec** - Upload OpenAPI file or AI-process documentation
 4. **Deploy** - Click "Generate MCP Server"
 5. **Connect** - Use OAuth or JWT in Claude Desktop
-
-### For Developers
-
-```bash
-# Clone repository
-git clone https://github.com/your-repo/tydli.git
-cd tydli
-
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
-```
 
 ## MCP Server Authentication
 
@@ -121,6 +109,7 @@ All deployed MCP servers support OAuth 2.1 and JWT Bearer Token authentication.
 5. Done! Claude can now use your MCP server tools
 
 **For Claude.ai (Web):**
+
 - Go to **Settings → Connectors** in Claude.ai
 - Add custom connector with the same details above
 
@@ -152,6 +141,7 @@ Get your JWT token from: **Dashboard → Deployment → Authentication → Gener
 **📚 [Complete Documentation Index](/docs-index)** - Find all documentation organized by audience and topic
 
 **Quick Links:**
+
 - [User Guide](/user/user_guide) - Complete usage instructions
 - [Security Documentation](/user/security) - Credential encryption & security architecture
 - [OAuth Integration Guide](/user/oauth_integration_guide) - OAuth 2.1 setup
@@ -166,6 +156,7 @@ Get your JWT token from: **Dashboard → Deployment → Authentication → Gener
 **Deployment**: https://tydli.io
 
 **Core Features**:
+
 - ✅ Email verification for new accounts
 - ✅ OAuth 2.1 authorization server with PKCE
 - ✅ JWT authentication for direct access
@@ -202,4 +193,3 @@ Built on [Lovable.dev](https://lovable.dev) - Full-stack web application platfor
 
 **Production URL**: https://tydli.io  
 **Project ID**: nqfciqtsrcjorlqcglmq
- 
