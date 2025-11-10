@@ -146,14 +146,216 @@ When reporting problems, include:
 - **API Reference**: See [API Reference](./API_REFERENCE.md)
 - **Status Page**: Monitor platform status
 
+## 🔍 Advanced Troubleshooting
+
+### Deployment Failed or Stuck
+
+If your deployment fails or gets stuck in "Generating" status:
+
+#### Check Your OpenAPI Spec
+
+- **Ensure valid JSON or YAML format**: Use a validator before uploading
+- **Verify all referenced schemas exist**: Check all `$ref` pointers
+- **Check for circular references**: Avoid schemas that reference themselves
+- **Test with a simple spec first**: Try the Petstore example to isolate issues
+
+#### View Deployment Logs
+
+1. Go to your deployment in the dashboard
+2. Click "View Logs" to see detailed error messages
+3. Look for validation errors or generation failures
+
+**Quick fix:** Delete the failed deployment and try again with a simplified version of your spec. Add complexity gradually to identify the problematic section.
+
+---
+
+### Authentication Errors (401/403)
+
+If your MCP server returns authentication errors:
+
+#### Verify Credentials
+
+- Double-check API key, username, or OAuth credentials
+- Ensure credentials have not expired
+- Test credentials directly with the target API using curl or Postman
+
+```bash
+# Test API key authentication
+curl -H "X-API-Key: YOUR_KEY" https://api.example.com/endpoint
+
+# Test Bearer token
+curl -H "Authorization: Bearer YOUR_TOKEN" https://api.example.com/endpoint
+```
+
+#### Check Header Format
+
+Make sure you're using the correct authentication header format:
+
+```
+Authorization: Bearer your-token-here
+X-API-Key: your-key-here
+Authorization: Basic base64-encoded-credentials
+```
+
+#### OAuth Troubleshooting
+
+- Verify redirect URIs are correctly configured in your OAuth app settings
+- Check that requested scopes are allowed for your application
+- Ensure token refresh is working (check deployment logs for refresh attempts)
+- Confirm client_id and client_secret are correct
+
+---
+
+### Claude Can't Find or Use MCP Server
+
+If Claude doesn't recognize your MCP server:
+
+#### Verify Configuration
+
+1. Check the URL in `claude_desktop_config.json` is correct and complete
+2. Ensure proper JSON formatting (no trailing commas, proper quotes)
+3. Verify the auth token is present and correct
+4. Confirm you restarted Claude Desktop after config changes (full quit + reopen)
+
+#### Test Server URL
+
+```bash
+# Test if server is accessible
+curl https://your-project.supabase.co/functions/v1/mcp-router/your-slug
+
+# Should return MCP server metadata (not an error)
+```
+
+If this returns an error, the issue is with your deployment, not Claude.
+
+#### Check Claude Logs
+
+Look for connection errors in Claude's log files:
+
+- **Mac**: `~/Library/Logs/Claude/`
+- **Windows**: `%APPDATA%\Claude\logs\`
+
+Search for errors related to your MCP server name or URL.
+
+---
+
+### Rate Limit Errors (429)
+
+If you're hitting rate limits:
+
+#### Check Your Plan Limits
+
+View current usage in **Settings → Billing**:
+
+- **Free tier**: 1,000 requests/month, 20 requests/hour
+- **Pro tier**: 50,000 requests/month, 200 requests/hour
+- **Enterprise**: Custom limits
+
+#### Optimize API Calls
+
+Reduce the number of requests:
+
+- **Batch multiple operations** when possible (combine requests)
+- **Cache responses** in your application or Claude's context
+- **Use webhooks instead of polling** when available
+- **Implement pagination** for large data sets
+- **Only request necessary fields** using field selectors
+
+---
+
+### Request Timeouts
+
+If requests are timing out:
+
+#### Check Target API Performance
+
+- Test the target API directly to measure response time
+- Some endpoints may naturally take longer (data exports, reports)
+- Consider async patterns for long-running operations
+
+#### MCP Timeout Limits
+
+Default timeout is **30 seconds per request**. For longer operations:
+
+- Break large operations into smaller chunks
+- Use pagination for large data sets (e.g., limit to 100 items per request)
+- Implement async job patterns with status polling:
+  1. Start job → Get job ID
+  2. Poll status → Check if complete
+  3. Retrieve results → When ready
+
+---
+
+### OpenAPI Spec Validation Issues
+
+#### Common Validation Errors
+
+**Missing required fields**:
+```yaml
+openapi: 3.1.0
+info:
+  title: "Your API Title"  # Required
+  version: "1.0.0"          # Required
+paths: {}                    # Required (can't be empty)
+```
+
+**Invalid $ref references**:
+```yaml
+# Bad - schema doesn't exist
+components:
+  schemas:
+    User:
+      $ref: '#/components/schemas/NonExistentSchema'
+
+# Good - schema exists
+components:
+  schemas:
+    User:
+      $ref: '#/components/schemas/Profile'
+    Profile:
+      type: object
+```
+
+**Circular schema definitions**:
+```yaml
+# Bad - creates infinite loop
+components:
+  schemas:
+    A:
+      $ref: '#/components/schemas/B'
+    B:
+      $ref: '#/components/schemas/A'
+```
+
+**Malformed URLs in servers section**:
+```yaml
+# Bad
+servers:
+  - url: not-a-valid-url
+
+# Good
+servers:
+  - url: https://api.example.com/v1
+```
+
+#### Validation Tools
+
+Use these tools to validate your spec before deploying:
+
+- **JSON**: [jsonlint.com](https://jsonlint.com)
+- **YAML**: [yamllint.com](https://yamllint.com)
+- **OpenAPI**: [editor.swagger.io](https://editor.swagger.io)
+
+---
+
 ## 🔍 Advanced Debugging
 
 ### Database Query Debugging
 
 **Check deployment logs for errors:**
 ```sql
-SELECT * FROM deployment_logs 
-WHERE deployment_id = 'your-deployment-id' 
+SELECT * FROM deployment_logs
+WHERE deployment_id = 'your-deployment-id'
 AND status = 'failure'
 ORDER BY created_at DESC
 LIMIT 20;
@@ -161,9 +363,9 @@ LIMIT 20;
 
 **Find slow API endpoints:**
 ```sql
-SELECT 
-  path, 
-  AVG(response_time_ms) as avg_ms, 
+SELECT
+  path,
+  AVG(response_time_ms) as avg_ms,
   MAX(response_time_ms) as max_ms,
   COUNT(*) as request_count
 FROM request_usage_tracking
@@ -185,7 +387,7 @@ ORDER BY created_at DESC;
 
 **Monitor error rate:**
 ```sql
-SELECT 
+SELECT
   DATE_TRUNC('hour', created_at) as hour,
   status,
   COUNT(*) as count
@@ -198,7 +400,7 @@ ORDER BY hour DESC;
 
 **Find requests with errors:**
 ```sql
-SELECT 
+SELECT
   path,
   response_status,
   COUNT(*) as error_count
@@ -220,6 +422,18 @@ For developers using the platform:
 - Test MCP endpoints directly using curl
 - Verify JWT tokens are valid
 - Check CORS headers for cross-origin issues
+
+---
+
+## 📚 Additional Resources
+
+For more help, check these guides:
+
+- **[Common Issues](/common-issues)**: Quick fixes for frequent problems
+- **[Getting Help](/getting-help)**: How to get support
+- **[FAQ](/faq)**: Frequently asked questions
+- **[Best Practices](/best-practices)**: Avoid common pitfalls
+- **[Authentication Methods](/authentication-methods)**: Auth troubleshooting
 
 ---
 
