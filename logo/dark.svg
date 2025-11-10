@@ -1,9 +1,10 @@
 <svg width="120" height="32" viewBox="0 0 120 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Icon: Stylized "T" representing API connections -->
-  <path d="M8 4H16V8H13V20C13 21.1046 13.8954 22 15 22H16V26H15C11.6863 26 9 23.3137 9 20V8H8V4Z" fill="white"/>
-  <circle cx="19" cy="15" r="2" fill="white"/>
-  <circle cx="25" cy="15" r="2" fill="white"/>
-  <path d="M28 15H30M3 15H5" stroke="white" stroke-width="2" stroke-linecap="round"/>
+  <!-- Official code-xml icon -->
+  <g transform="translate(4, 4)">
+    <path d="m18 16 4-4-4-4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="m6 8-4 4 4 4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="m14.5 4-5 16" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
   
   <!-- Text: "tydli" -->
   <text x="36" y="21" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="600" fill="white">tydli</text>
