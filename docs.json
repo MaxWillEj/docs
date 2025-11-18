@@ -133,6 +133,25 @@
           }
         ]
       }
+      ,
+      {
+        "header": "Legal",
+        "items": [
+          {
+            "label": "Cookies",
+            "href": "https://docs.tydli.io/legal/cookies"
+          },
+          {
+            "label": "Privacy policy",
+            "href": "https://docs.tydli.io/legal/privacy"
+          },
+          {
+            "label": "Terms and conditions",
+            "href": "https://docs.tydli.io/legal/tos"
+          }
+          
+        ]
+      }
     ]
   },
   "search": {
