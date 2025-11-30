@@ -51,23 +51,11 @@ This guide walks you through using the API Docs to MCP Server platform to conver
    - After deployment, copy your MCP server URL from the dashboard
    - It will look like: `https://...supabase.co/functions/v1/mcp-router/your-api-xxxxx`
 
-2. **Register OAuth Client**
-
-   Make a POST request to register Claude as an OAuth client:
-
-   ```bash
-   curl -X POST https://...supabase.co/functions/v1/mcp-oauth-server/register \
-     -H "Content-Type: application/json" \
-     -d '{
-       "client_name": "Claude Desktop",
-       "redirect_uris": ["http://localhost:3000/callback"],
-       "grant_types": ["authorization_code"],
-       "response_types": ["code"],
-       "token_endpoint_auth_method": "none"
-     }'
-   ```
-
-   Save the returned `client_id`.
+2. **Get OAuth Credentials**
+   - In your deployment dashboard, scroll to "OAuth 2.1 Client"
+   - Select "Claude Desktop" (or "Both")
+   - Click "Set Up OAuth"
+   - Copy the **Client ID**
 
 3. **Update Claude Configuration**
 
@@ -103,7 +91,7 @@ This guide walks you through using the API Docs to MCP Server platform to conver
    - Approve the access request
    - Claude will now have access to your MCP server tools
 
-### Step 3: Use Your API in Claude
+### Step 4: Use Your API in Claude
 
 Once configured, you can use your API naturally in conversations:
 
@@ -342,7 +330,7 @@ Each MCP server can use bearer token authentication as an alternative to OAuth 2
 
 Each successful deployment provides a unique authenticated URL:
 ```
-https://nqfciqtsrcjorlqcglmq.supabase.co/functions/v1/mcp-router/[your-deployment-slug]
+https://your-project.supabase.co/functions/v1/mcp-router/[your-deployment-slug]
 ```
 
 **Authentication Required**: All MCP server access requires valid authentication for security (OAuth 2.1 recommended, static bearer token also supported).
@@ -359,8 +347,8 @@ https://nqfciqtsrcjorlqcglmq.supabase.co/functions/v1/mcp-router/[your-deploymen
    - **Name**: `Tydli - [your-deployment-slug]`
    - **MCP Server URL**: Your MCP router URL
    - **OAuth Client ID**: (from your deployment dashboard)
-   - **Authorization URL**: `https://nqfciqtsrcjorlqcglmq.supabase.co/functions/v1/mcp-oauth-server/authorize`
-   - **Token URL**: `https://nqfciqtsrcjorlqcglmq.supabase.co/functions/v1/mcp-oauth-server/token`
+   - **Authorization URL**: `https://your-project.supabase.co/functions/v1/mcp-oauth-server/authorize`
+   - **Token URL**: `https://your-project.supabase.co/functions/v1/mcp-oauth-server/token`
 4. Click **Connect** - your browser will open for authorization
 5. **Verify Connection**: Ask Claude about available tools to confirm setup
 
