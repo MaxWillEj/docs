@@ -51,7 +51,6 @@
       {
         "group": "Guides",
         "pages": [
-          "guides/claude-desktop-setup",
           "guides/authentication-methods",
           "guides/oauth-integration",
           "guides/gallery",
@@ -69,7 +68,6 @@
       {
         "group": "Support",
         "pages": [
-          "support/common-issues",
           "support/troubleshooting",
           "support/faq",
           "community/getting-help"
