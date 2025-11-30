@@ -1,0 +1,91 @@
+---
+title: Optimizing OpenAPI
+description: Best practices for generating high-quality MCP tools
+icon: wand-magic-sparkles
+---
+# Optimizing OpenAPI for MCP
+
+Model Context Protocol (MCP) servers are only as good as the tools they expose. Since Tydli generates these tools directly from your OpenAPI specification, the quality of your spec determines the quality of the AI's interaction.
+
+Here are best practices for optimizing your OpenAPI spec for MCP.
+
+## 1. Operation IDs are Tool Names
+
+Tydli uses the `operationId` field to generate the tool name.
+
+-   **Bad**: `get_data` (Too generic)
+-   **Good**: `get_customer_orders` (Descriptive)
+-   **Best Practice**: Use `verb_noun` format (e.g., `list_users`, `create_ticket`).
+
+```yaml
+paths:
+  /users:
+    get:
+      operationId: list_users
+      ...
+```
+
+## 2. Descriptions are AI Prompts
+
+The `description` fields (for operations and parameters) are the most important part of your spec. They tell the AI *when* and *how* to use the tool.
+
+-   **Operation Description**: Explain what the tool does and any side effects.
+    *   *Example*: "Searches for products by name or category. Returns a list of matching items with stock levels."
+-   **Parameter Description**: Explain constraints and expected format.
+    *   *Example*: "The search query string. Minimum 3 characters."
+
+```yaml
+parameters:
+  - name: limit
+    in: query
+    description: "Maximum number of results to return. Default is 10, max is 100."
+```
+
+## 3. Use Enums for Strict Choices
+
+If a parameter has a fixed set of valid values, use `enum`. This prevents the AI from hallucinating invalid inputs.
+
+```yaml
+parameters:
+  - name: status
+    in: query
+    schema:
+      type: string
+      enum: [open, closed, pending]
+      description: "Filter tickets by status."
+```
+
+## 4. Define Schemas Clearly
+
+Use `components/schemas` to define reusable data structures. Give them meaningful names.
+
+-   **Why**: The AI sees the structure of the input and output. Clear schema names help it understand the data model.
+
+## 5. Prune Unnecessary Endpoints
+
+Don't expose every internal API endpoint. Only include tools that are useful for the AI.
+
+-   **Tip**: Create a specific OpenAPI spec just for your MCP server, removing admin-only or irrelevant endpoints.
+
+## 6. Security Schemes
+
+Ensure your security schemes are correctly defined so Tydli can handle authentication automatically.
+
+```yaml
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+security:
+  - ApiKeyAuth: []
+```
+
+## Checklist
+
+- [ ] Every operation has a unique, descriptive `operationId`.
+- [ ] Every operation has a clear `summary` and `description`.
+- [ ] All parameters have `description`s explaining their purpose.
+- [ ] Enums are used where appropriate.
+- [ ] Input/Output schemas are well-defined.
