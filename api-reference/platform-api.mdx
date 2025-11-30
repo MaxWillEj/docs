@@ -1,0 +1,132 @@
+---
+title: Platform API
+description: Reference for the Tydli Platform API
+icon: code
+---
+# Tydli Platform API Reference
+
+The Tydli Platform API allows you to manage your deployments and OAuth clients programmatically.
+
+## Base URL
+
+All API requests should be made to:
+
+```
+https://your-project.supabase.co/functions/v1
+```
+
+## Authentication
+
+Most endpoints require authentication. You can authenticate using:
+
+- **Bearer Token**: `Authorization: Bearer <your-jwt-token>`
+
+## OAuth 2.1 Server
+
+Endpoints for managing OAuth clients and performing OAuth flows.
+
+### Register Client
+
+Register a new OAuth client for your deployment.
+
+- **Endpoint**: `POST /mcp-oauth-server/register`
+- **Content-Type**: `application/json`
+
+**Request Body:**
+
+```json
+{
+  "client_name": "My Client",
+  "redirect_uris": ["http://localhost:3000/callback"],
+  "scope": "openid email"
+}
+```
+
+**Response:**
+
+```json
+{
+  "client_id": "mcp_...",
+  "client_secret": "secret_...",
+  "client_name": "My Client",
+  "redirect_uris": ["..."]
+}
+```
+
+### Authorization Endpoint
+
+The URL to redirect users to for authorization.
+
+- **URL**: `GET /mcp-oauth-server/authorize`
+- **Parameters**:
+    - __INLINE_CODE_4__: Your client ID
+    - __INLINE_CODE_5__: __INLINE_CODE_6__
+    - __INLINE_CODE_7__: One of your registered redirect URIs
+    - __INLINE_CODE_8__: PKCE code challenge
+    - __INLINE_CODE_9__: __INLINE_CODE_10__
+    - __INLINE_CODE_11__: Random string for CSRF protection
+
+### Token Endpoint
+
+Exchange an authorization code for an access token.
+
+- **URL**: `POST /mcp-oauth-server/token`
+- **Content-Type**: `application/json`
+
+**Request Body:**
+
+```json
+{
+  "grant_type": "authorization_code",
+  "code": "auth_code_from_callback",
+  "redirect_uri": "http://localhost:3000/callback",
+  "client_id": "your_client_id",
+  "code_verifier": "pkce_code_verifier"
+}
+```
+
+## MCP Router
+
+Endpoints for interacting with your deployed MCP servers.
+
+### Invoke Tool
+
+Call a tool on your deployed MCP server.
+
+- **Endpoint**: `POST /mcp-router/{deployment_slug}`
+- **Headers**:
+    - __INLINE_CODE_15__: __INLINE_CODE_16__
+
+**Request Body:**
+
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "tools/call",
+  "params": {
+    "name": "tool_name",
+    "arguments": {
+      "arg1": "value"
+    }
+  },
+  "id": 1
+}
+```
+
+## Discovery
+
+### Protected Resource Metadata
+
+Discover OAuth configuration for a resource.
+
+- **Endpoint**: `GET /mcp-router/{deployment_slug}/.well-known/oauth-protected-resource`
+
+**Response:**
+
+```json
+{
+  "resource": "https://...",
+  "authorization_servers": ["https://..."],
+  "scopes_supported": ["openid", "email", "mcp.tools.execute"]
+}
+```
