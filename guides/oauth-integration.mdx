@@ -29,16 +29,16 @@ You have two options to register a client:
 
 1. Navigate to your deployment in the dashboard
 2. Find the "OAuth 2.1 Client" section
-3. Enter a client name (e.g., "My AI Agent")
-4. Enter your redirect URI (e.g., `http://localhost:3000/callback`)
-5. Click "Register OAuth Client"
-6. **Important**: Copy and save the `client_secret` immediately - it won't be shown again!
+3. Select your platform: **Claude Desktop**, **Claude.ai (Web)**, or **Both**
+4. Click "Set Up OAuth"
+5. The system will automatically register the correct redirect URIs for your selected platform
+6. **Note**: No client secret is required as we use PKCE for enhanced security.
 
 #### Option B: Use the API
 
 ```bash
 curl -X POST \
-  'https://nqfciqtsrcjorlqcglmq.supabase.co/functions/v1/mcp-oauth-server/register' \
+  'https://your-project.supabase.co/functions/v1/mcp-oauth-server/register' \
   -H 'Content-Type: application/json' \
   -d '{
     "client_name": "My AI Agent",
@@ -69,10 +69,10 @@ Response:
 3. Click **"Add custom connector"**
 4. Fill in the following information:
    - **Name**: `Tydli - [your-deployment-slug]`
-   - **MCP Server URL**: `https://nqfciqtsrcjorlqcglmq.supabase.co/functions/v1/mcp-router/[your-deployment-slug]`
+   - **MCP Server URL**: `https://your-project.supabase.co/functions/v1/mcp-router/[your-deployment-slug]`
    - **OAuth Client ID**: (your client ID from Step 1)
-   - **Authorization URL**: `https://nqfciqtsrcjorlqcglmq.supabase.co/functions/v1/mcp-oauth-server/authorize`
-   - **Token URL**: `https://nqfciqtsrcjorlqcglmq.supabase.co/functions/v1/mcp-oauth-server/token`
+   - **Authorization URL**: `https://your-project.supabase.co/functions/v1/mcp-oauth-server/authorize`
+   - **Token URL**: `https://your-project.supabase.co/functions/v1/mcp-oauth-server/token`
 5. Click **Connect**
 
 #### For Claude.ai (Web):
@@ -271,21 +271,21 @@ Tydli implements **RFC 9728 OAuth 2.0 Protected Resource Metadata** for automati
 
 **Endpoint:** `GET /.well-known/oauth-protected-resource`
 
-**Base URL:** Your MCP server URL (e.g., `https://nqfciqtsrcjorlqcglmq.supabase.co/functions/v1/mcp-router/your-slug`)
+**Base URL:** Your MCP server URL (e.g., `https://your-project.supabase.co/functions/v1/mcp-router/your-slug`)
 
 ### Example Request
 
 ```bash
-curl https://nqfciqtsrcjorlqcglmq.supabase.co/functions/v1/mcp-router/your-deployment-slug/.well-known/oauth-protected-resource
+curl https://your-project.supabase.co/functions/v1/mcp-router/your-deployment-slug/.well-known/oauth-protected-resource
 ```
 
 ### Example Response
 
 ```json
 {
-  "resource": "https://nqfciqtsrcjorlqcglmq.supabase.co/functions/v1/mcp-router/your-slug",
+  "resource": "https://your-project.supabase.co/functions/v1/mcp-router/your-slug",
   "authorization_servers": [
-    "https://nqfciqtsrcjorlqcglmq.supabase.co/functions/v1/mcp-oauth-server"
+    "https://your-project.supabase.co/functions/v1/mcp-oauth-server"
   ],
   "bearer_methods_supported": ["header"],
   "resource_documentation": "https://tydli.io/docs",
@@ -366,19 +366,19 @@ For completeness, the authorization server also exposes metadata:
 **Endpoint:** `GET /.well-known/oauth-authorization-server`
 
 ```bash
-curl https://nqfciqtsrcjorlqcglmq.supabase.co/functions/v1/mcp-oauth-server/.well-known/oauth-authorization-server
+curl https://your-project.supabase.co/functions/v1/mcp-oauth-server/.well-known/oauth-authorization-server
 ```
 
 **Response:**
 ```json
 {
-  "issuer": "https://nqfciqtsrcjorlqcglmq.supabase.co/functions/v1/mcp-oauth-server",
-  "authorization_endpoint": "https://nqfciqtsrcjorlqcglmq.supabase.co/functions/v1/mcp-oauth-server/authorize",
-  "token_endpoint": "https://nqfciqtsrcjorlqcglmq.supabase.co/functions/v1/mcp-oauth-server/token",
-  "revocation_endpoint": "https://nqfciqtsrcjorlqcglmq.supabase.co/functions/v1/mcp-oauth-server/revoke",
-  "userinfo_endpoint": "https://nqfciqtsrcjorlqcglmq.supabase.co/functions/v1/mcp-oauth-server/userinfo",
-  "registration_endpoint": "https://nqfciqtsrcjorlqcglmq.supabase.co/functions/v1/mcp-oauth-server/register",
-  "jwks_uri": "https://nqfciqtsrcjorlqcglmq.supabase.co/functions/v1/mcp-oauth-server/.well-known/jwks.json",
+  "issuer": "https://your-project.supabase.co/functions/v1/mcp-oauth-server",
+  "authorization_endpoint": "https://your-project.supabase.co/functions/v1/mcp-oauth-server/authorize",
+  "token_endpoint": "https://your-project.supabase.co/functions/v1/mcp-oauth-server/token",
+  "revocation_endpoint": "https://your-project.supabase.co/functions/v1/mcp-oauth-server/revoke",
+  "userinfo_endpoint": "https://your-project.supabase.co/functions/v1/mcp-oauth-server/userinfo",
+  "registration_endpoint": "https://your-project.supabase.co/functions/v1/mcp-oauth-server/register",
+  "jwks_uri": "https://your-project.supabase.co/functions/v1/mcp-oauth-server/.well-known/jwks.json",
   "scopes_supported": ["openid", "email", "mcp.tools.read", "mcp.tools.execute"],
   "response_types_supported": ["code"],
   "grant_types_supported": ["authorization_code", "refresh_token"],
@@ -504,7 +504,7 @@ If you're implementing your own client, here's how to manually refresh:
 **Request:**
 ```bash
 curl -X POST \
-  'https://nqfciqtsrcjorlqcglmq.supabase.co/functions/v1/mcp-oauth-server/token' \
+  'https://your-project.supabase.co/functions/v1/mcp-oauth-server/token' \
   -H 'Content-Type: application/json' \
   -d '{
     "grant_type": "refresh_token",
@@ -530,7 +530,7 @@ curl -X POST \
 ```javascript
 async function refreshAccessToken(refreshToken, clientId) {
   const response = await fetch(
-    'https://nqfciqtsrcjorlqcglmq.supabase.co/functions/v1/mcp-oauth-server/token',
+    'https://your-project.supabase.co/functions/v1/mcp-oauth-server/token',
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -602,7 +602,7 @@ To revoke a refresh token (e.g., on logout):
 
 ```bash
 curl -X POST \
-  'https://nqfciqtsrcjorlqcglmq.supabase.co/functions/v1/mcp-oauth-server/revoke' \
+  'https://your-project.supabase.co/functions/v1/mcp-oauth-server/revoke' \
   -H 'Content-Type: application/json' \
   -d '{
     "token": "mcp_refresh_abc123...",
@@ -673,7 +673,7 @@ const { error } = await supabase
 
 ```bash
 curl -X POST \
-  'https://nqfciqtsrcjorlqcglmq.supabase.co/functions/v1/mcp-oauth-server/register' \
+  'https://your-project.supabase.co/functions/v1/mcp-oauth-server/register' \
   -H 'Content-Type: application/json' \
   -d '{
     "client_name": "Test Client",
@@ -685,14 +685,14 @@ curl -X POST \
 
 Open in browser:
 ```
-https://nqfciqtsrcjorlqcglmq.supabase.co/functions/v1/mcp-oauth-server/authorize?client_id=YOUR_CLIENT_ID&response_type=code&redirect_uri=http://localhost:3000/callback&code_challenge=CHALLENGE&code_challenge_method=S256
+https://your-project.supabase.co/functions/v1/mcp-oauth-server/authorize?client_id=YOUR_CLIENT_ID&response_type=code&redirect_uri=http://localhost:3000/callback&code_challenge=CHALLENGE&code_challenge_method=S256
 ```
 
 ### 3. Test Token Exchange
 
 ```bash
 curl -X POST \
-  'https://nqfciqtsrcjorlqcglmq.supabase.co/functions/v1/mcp-oauth-server/token' \
+  'https://your-project.supabase.co/functions/v1/mcp-oauth-server/token' \
   -H 'Content-Type: application/json' \
   -d '{
     "grant_type": "authorization_code",
@@ -707,7 +707,7 @@ curl -X POST \
 
 ```bash
 curl -X GET \
-  'https://nqfciqtsrcjorlqcglmq.supabase.co/functions/v1/mcp-router/your-slug' \
+  'https://your-project.supabase.co/functions/v1/mcp-router/your-slug' \
   -H 'Authorization: Bearer YOUR_ACCESS_TOKEN'
 ```
 
@@ -740,8 +740,8 @@ from oauthlib.oauth2 import BackendApplicationClient
 # OAuth configuration
 client_id = "your-client-id"
 client_secret = "your-client-secret"
-authorize_url = "https://nqfciqtsrcjorlqcglmq.supabase.co/functions/v1/mcp-oauth-server/authorize"
-token_url = "https://nqfciqtsrcjorlqcglmq.supabase.co/functions/v1/mcp-oauth-server/token"
+authorize_url = "https://your-project.supabase.co/functions/v1/mcp-oauth-server/authorize"
+token_url = "https://your-project.supabase.co/functions/v1/mcp-oauth-server/token"
 redirect_uri = "http://localhost:3000/callback"
 
 # Initialize OAuth session
@@ -760,7 +760,7 @@ token = oauth.fetch_token(
 )
 
 # Use token to access MCP server
-mcp_url = "https://nqfciqtsrcjorlqcglmq.supabase.co/functions/v1/mcp-router/your-slug"
+mcp_url = "https://your-project.supabase.co/functions/v1/mcp-router/your-slug"
 response = oauth.get(mcp_url)
 print(response.json())
 ```
@@ -776,7 +776,7 @@ const config = {
     secret: 'your-client-secret'
   },
   auth: {
-    tokenHost: 'https://nqfciqtsrcjorlqcglmq.supabase.co',
+    tokenHost: 'https://your-project.supabase.co',
     tokenPath: '/functions/v1/mcp-oauth-server/token',
     authorizePath: '/functions/v1/mcp-oauth-server/authorize'
   }
@@ -803,7 +803,7 @@ const accessToken = await client.getToken(tokenParams);
 
 // Use token to access MCP server
 const response = await fetch(
-  'https://nqfciqtsrcjorlqcglmq.supabase.co/functions/v1/mcp-router/your-slug',
+  'https://your-project.supabase.co/functions/v1/mcp-router/your-slug',
   {
     headers: {
       'Authorization': `Bearer ${accessToken.token.access_token}`
