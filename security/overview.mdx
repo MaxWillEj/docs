@@ -260,6 +260,21 @@ USING (has_role(auth.uid(), 'admin'));
 - Prevents automated scraping of gallery templates
 - Ensures fair resource allocation
 
+### IP-Based Rate Limiting
+
+**Why it matters**: Protects public MCP endpoints from DDoS attacks and abuse
+
+**Our implementation** (for deployments with no authentication required):
+- Per-IP request limits (default: 60 requests/minute)
+- Automatic blocking of abusive IPs
+- Admin-configurable limits per deployment
+- Real-time security event logging
+
+**What this prevents**:
+- DDoS attacks against public MCP servers
+- Quota exhaustion by malicious actors
+- Abuse of unauthenticated endpoints
+
 ---
 
 ## Audit Trails & Monitoring
