@@ -144,6 +144,56 @@ Retry-After: 600
 - Retry immediately on 429 errors
 - Create multiple OAuth clients unnecessarily
 
+## IP-Based Rate Limits
+
+### Public Endpoint Protection
+
+For MCP servers configured with public access (no authentication required), additional IP-based rate limiting applies to protect against abuse and DDoS attacks:
+
+| Metric | Default Limit | Time Window |
+|--------|---------------|-------------|
+| **Requests per IP** | 60 | Per minute |
+
+### IP Rate Limit Response
+
+When IP rate limit is exceeded:
+
+```http
+HTTP/1.1 429 Too Many Requests
+Content-Type: application/json
+Retry-After: 60
+
+{
+  "error": "rate_limit_exceeded",
+  "error_description": "Too many requests from this IP address",
+  "retry_after": 60,
+  "request_id": "abc-123-def"
+}
+```
+
+### Blocked IP Response
+
+If an IP has been blocked due to repeated abuse:
+
+```http
+HTTP/1.1 403 Forbidden
+Content-Type: application/json
+
+{
+  "error": "access_denied",
+  "error_description": "IP address blocked",
+  "request_id": "abc-123-def"
+}
+```
+
+### Best Practices for Public Endpoints
+
+- ✅ Implement client-side rate limiting
+- ✅ Use exponential backoff on 429 responses
+- ✅ Consider upgrading to OAuth authentication for production use
+- ✅ Monitor usage patterns in deployment logs
+- ✅ Contact support if you believe an IP block is in error
+
 ## Deployment Limits
 
 ### Active Deployments

@@ -263,6 +263,29 @@ Reduce the number of requests:
 
 ---
 
+### IP Blocked Errors (403)
+
+If you receive an "IP address blocked" error:
+
+#### Possible Causes
+- Your IP exceeded rate limits multiple times
+- Your IP was manually blocked by an administrator
+- Suspicious activity was detected from your IP
+
+#### Solutions
+1. **Wait and retry** - Temporary blocks may expire automatically
+2. **Check your usage patterns** - Ensure you're not making excessive requests
+3. **Contact support** - If you believe the block is in error
+4. **Use authentication** - Authenticated endpoints have different rate limits
+
+#### For API Consumers
+If your users report 403 errors:
+- Check your MCP server's authentication configuration
+- Consider implementing user-level authentication instead of public access
+- Review your rate limit settings in the dashboard
+
+---
+
 ### Request Timeouts
 
 If requests are timing out:
