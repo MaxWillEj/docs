@@ -17,16 +17,16 @@ This guide helps you resolve common issues with the Tydli platform.
   1. Go to deployment settings
   2. Click "Test Credentials"
   3. If test fails, update credentials
-  4. Re-test until successful
-  5. See [Credential Troubleshooting Guide](/credential-troubleshooting)
+   4. Re-test until successful
+   5. See [Authentication Methods](/guides/authentication-methods) for details
 
 **Issue**: Connection test passed but Claude fails
 - **Cause**: Different endpoints have different requirements
 - **Solution**:
   1. Check API documentation for endpoint-specific auth
-  2. Verify all endpoints in OpenAPI spec use same auth
-  3. Test multiple endpoints manually
-  4. See [Credential Troubleshooting Guide](/credential-troubleshooting)
+   2. Verify all endpoints in OpenAPI spec use same auth
+   3. Test multiple endpoints manually
+   4. See [Authentication Methods](/guides/authentication-methods) for details
 
 ### File Upload Problems
 
@@ -79,7 +79,7 @@ This guide helps you resolve common issues with the Tydli platform.
 
 **Issue**: "Rate limit exceeded" errors
 - **Cause**: Too many requests in short time period
-- **Solution**: Wait a few minutes before retrying (see [Rate Limits](/api-reference/rate-limits) for details)
+- **Solution**: Wait a few minutes before retrying (check your dashboard for rate limit details)
 
 ### Authentication Problems
 
@@ -452,12 +452,11 @@ For developers using the platform:
 
 For more help, check these guides:
 
-- **[Common Issues](/common-issues)**: Quick fixes for frequent problems
-- **[Getting Help](/community/getting-help)**: How to get support
 - **[FAQ](/support/faq)**: Frequently asked questions
+- **[Getting Help](/community/getting-help)**: How to get support
 - **[Best Practices](/guides/best-practices)**: Avoid common pitfalls
 - **[Authentication Methods](/guides/authentication-methods)**: Auth troubleshooting
 
 ---
 
-*For additional support, consult the complete documentation or contact the development team.* 
+*For additional support, consult the complete documentation or contact the development team.*
