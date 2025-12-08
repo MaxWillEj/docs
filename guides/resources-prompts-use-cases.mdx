@@ -1,0 +1,295 @@
+---
+title: Resources & Prompts Use Cases
+description: Real-world examples for supercharging AI agents
+icon: sparkles
+---
+# Resources & Prompts: Use Cases
+
+> 💡 **New to Resources & Prompts?** Read the [User Guide section](./USER_GUIDE.md#customizing-resources--prompts) first for fundamentals.
+
+## Overview
+
+Resources and Prompts supercharge how AI agents interact with your MCP server. This guide shows real-world examples across different industries and use cases.
+
+---
+
+## Common Use Cases
+
+### 1. API Documentation as a Resource
+
+**Scenario:** Your API has complex authentication flows that aren't obvious from the OpenAPI spec.
+
+**Solution:** Create a resource with step-by-step auth instructions.
+
+```json
+{
+  "name": "authentication-guide",
+  "uri": "file://docs/auth-guide.md",
+  "title": "Authentication Guide",
+  "description": "Step-by-step authentication instructions - read before making authenticated requests",
+  "mime_type": "text/markdown",
+  "content": "## Authentication\n\n### Getting a Token\n1. Call POST /auth/login with email and password\n2. Store the `access_token` from response\n3. Include in all requests: `Authorization: Bearer {token}`\n\n### Token Refresh\nTokens expire after 1 hour. Call POST /auth/refresh with your `refresh_token`.\n\n### Common Errors\n- 401: Token expired or invalid\n- 403: Insufficient permissions"
+}
+```
+
+**Impact:** AI agents will correctly implement OAuth flows instead of guessing.
+
+---
+
+### 2. Business Rules as Resources
+
+**Scenario:** Your API has business logic (e.g., "orders over $1000 require manager approval").
+
+**Solution:** Create a "business-rules" resource documenting these constraints.
+
+```json
+{
+  "name": "business-rules",
+  "uri": "file://docs/business-rules.md",
+  "title": "Business Rules & Constraints",
+  "description": "Important business rules to consider before creating or modifying data",
+  "mime_type": "text/markdown",
+  "content": "## Order Rules\n\n- Orders over $1000 require manager approval\n- Maximum 50 items per order\n- Discount codes limited to one per order\n\n## User Rules\n\n- Users must verify email before checkout\n- Admin role required for refunds > $500\n- Account lockout after 5 failed login attempts"
+}
+```
+
+**Impact:** AI agents will validate requests before calling your API, reducing errors.
+
+---
+
+### 3. Response Formatting Prompts
+
+**Scenario:** You want AI agents to always format responses in a specific way.
+
+**Solution:** Create a "format-response" prompt template.
+
+```json
+{
+  "name": "format-response",
+  "title": "Standard Response Format",
+  "description": "Use this to format all user-facing responses consistently",
+  "arguments": [
+    {"name": "status", "required": true, "description": "success or error"},
+    {"name": "message", "required": true, "description": "Main message"},
+    {"name": "details", "required": false, "description": "Additional details"}
+  ],
+  "template": "{{#if status eq 'success'}}✅{{else}}❌{{/if}} **{{status | uppercase}}**\n\n{{message}}\n\n{{#if details}}📋 Details: {{details}}{{/if}}"
+}
+```
+
+**Impact:** Consistent, professional output every time.
+
+---
+
+### 4. Multi-Step Workflow Prompts
+
+**Scenario:** Creating a user requires 3 API calls in a specific order.
+
+**Solution:** Create a workflow prompt that lists the steps.
+
+```json
+{
+  "name": "create-user-workflow",
+  "title": "Create User Workflow",
+  "description": "Follow these steps when creating a new user account",
+  "arguments": [
+    {"name": "email", "required": true, "description": "New user's email"},
+    {"name": "name", "required": true, "description": "User's full name"},
+    {"name": "role", "required": false, "description": "Role (default: member)"}
+  ],
+  "template": "## Creating User: {{name}} ({{email}})\n\n**Step 1:** Validate email\n```\nPOST /users/validate-email\n{\"email\": \"{{email}}\"}\n```\n\n**Step 2:** Create user (if validation passes)\n```\nPOST /users\n{\"email\": \"{{email}}\", \"name\": \"{{name}}\", \"role\": \"{{role}}\"}\n```\n\n**Step 3:** Send welcome email\n```\nPOST /users/\{id\}/send-welcome\n```\n\n**Step 4:** Return user ID and confirmation to user"
+}
+```
+
+**Impact:** AI agents will never skip steps or call endpoints out of order.
+
+---
+
+### 5. Error Handling Prompts
+
+**Scenario:** Your API returns cryptic error codes that need translation.
+
+**Solution:** Create an "explain-error" prompt.
+
+```json
+{
+  "name": "explain-error",
+  "title": "Explain API Error",
+  "description": "Translate API error codes into user-friendly explanations",
+  "arguments": [
+    {"name": "code", "required": true, "description": "Error code from API"},
+    {"name": "context", "required": false, "description": "What the user was trying to do"}
+  ],
+  "template": "The API returned error code **{{code}}**.\n\n{{#if context}}You were trying to: {{context}}\n\n{{/if}}Please look up this error code in the error-codes resource and explain:\n1. What went wrong\n2. Why it happened\n3. How to fix it\n4. Whether to retry or take different action"
+}
+```
+
+**Impact:** Users get helpful error messages instead of "Error 4012".
+
+---
+
+### 6. Configuration Schemas as Resources
+
+**Scenario:** Your API accepts complex configuration objects.
+
+**Solution:** Provide a JSON schema as a resource.
+
+```json
+{
+  "name": "webhook-config-schema",
+  "uri": "file://schemas/webhook-config.json",
+  "title": "Webhook Configuration Schema",
+  "description": "Valid options for webhook configuration - reference when creating/updating webhooks",
+  "mime_type": "application/json",
+  "content": "{\n  \"type\": \"object\",\n  \"required\": [\"url\", \"events\"],\n  \"properties\": {\n    \"url\": {\"type\": \"string\", \"format\": \"uri\"},\n    \"events\": {\"type\": \"array\", \"items\": {\"enum\": [\"order.created\", \"order.updated\", \"user.created\"]}},\n    \"secret\": {\"type\": \"string\", \"minLength\": 32},\n    \"enabled\": {\"type\": \"boolean\", \"default\": true}\n  }\n}"
+}
+```
+
+**Impact:** AI agents will only suggest valid configurations.
+
+---
+
+## Industry-Specific Examples
+
+### E-Commerce APIs
+
+**Resources:**
+- `product-categories` - Valid category IDs and hierarchy
+- `shipping-rules` - Shipping zones, rates, and restrictions
+- `tax-rates` - Tax calculation rules by region
+- `inventory-status-codes` - What each status means
+
+**Prompts:**
+- `create-order-workflow` - Step-by-step order creation
+- `process-refund` - Refund handling with validation
+- `generate-invoice` - Consistent invoice formatting
+
+---
+
+### Payment APIs
+
+**Resources:**
+- `supported-currencies` - Valid currency codes and conversion rates
+- `fee-structure` - Transaction fees by payment method
+- `compliance-rules` - PCI DSS and regional compliance requirements
+- `error-codes` - Payment error codes and recovery actions
+
+**Prompts:**
+- `format-receipt` - Standardized payment receipt
+- `dispute-workflow` - Chargeback handling steps
+- `reconciliation-report` - Daily settlement summary format
+
+---
+
+### CRM APIs
+
+**Resources:**
+- `lead-stages` - Valid pipeline stages and transitions
+- `contact-fields` - Custom field definitions
+- `automation-triggers` - Available automation events
+- `permission-matrix` - Role-based access rules
+
+**Prompts:**
+- `qualify-lead` - Lead qualification questionnaire
+- `meeting-summary` - Standardized call notes format
+- `follow-up-email` - Template for follow-up communications
+
+---
+
+### Analytics APIs
+
+**Resources:**
+- `metric-definitions` - What each metric means
+- `dimension-options` - Valid grouping dimensions
+- `date-range-limits` - Maximum query ranges
+- `aggregation-rules` - How data is rolled up
+
+**Prompts:**
+- `weekly-report` - Standard weekly metrics summary
+- `anomaly-alert` - Consistent anomaly notification format
+- `comparison-analysis` - Period-over-period comparison template
+
+---
+
+### Project Management APIs
+
+**Resources:**
+- `project-templates` - Available project templates
+- `status-transitions` - Valid status change rules
+- `priority-definitions` - What each priority level means
+- `permission-levels` - Who can do what
+
+**Prompts:**
+- `standup-summary` - Daily standup report format
+- `sprint-review` - Sprint completion summary
+- `risk-assessment` - Standardized risk evaluation template
+
+---
+
+## Advanced Patterns
+
+### Combining Resources and Prompts
+
+**Pattern:** Reference resources within prompts for maximum effectiveness.
+
+```json
+{
+  "name": "smart-error-handler",
+  "title": "Smart Error Handler",
+  "description": "Handle errors with full context",
+  "arguments": [
+    {"name": "error_code", "required": true},
+    {"name": "operation", "required": true}
+  ],
+  "template": "Error {{error_code}} occurred during {{operation}}.\n\n1. Look up {{error_code}} in the 'error-codes' resource\n2. Check 'business-rules' resource for any relevant constraints\n3. Provide user-friendly explanation and suggested action"
+}
+```
+
+### Dynamic Context Resources
+
+**Pattern:** Include environment-specific information.
+
+```json
+{
+  "name": "environment-config",
+  "uri": "file://config/production.md",
+  "title": "Production Environment",
+  "description": "Current environment settings and limits",
+  "content": "## Production Environment\n\n- **Rate Limit:** 1000 req/min\n- **Timeout:** 30 seconds\n- **Max Payload:** 10MB\n- **Support:** support@company.com"
+}
+```
+
+### Validation Prompts
+
+**Pattern:** Pre-validate before expensive operations.
+
+```json
+{
+  "name": "validate-before-create",
+  "title": "Pre-Creation Validation",
+  "description": "Run these checks before creating expensive resources",
+  "arguments": [
+    {"name": "resource_type", "required": true},
+    {"name": "data", "required": true}
+  ],
+  "template": "Before creating {{resource_type}}:\n\n1. Check 'business-rules' resource for constraints\n2. Validate {{data}} against schema in 'schemas' resources\n3. Verify user has permission (check 'permissions' resource)\n4. Estimate cost if applicable\n5. Only proceed if all checks pass"
+}
+```
+
+---
+
+## Getting Started Checklist
+
+1. **Start small** — Add 1-2 resources and 1-2 prompts
+2. **Focus on pain points** — What questions do users ask most?
+3. **Test with real scenarios** — Have Claude use your resources and prompts
+4. **Iterate based on usage** — Check logs to see what's being accessed
+5. **Document patterns** — Share successful templates with your team
+
+---
+
+## Related Documentation
+
+- [User Guide: Resources & Prompts](./USER_GUIDE.md#customizing-resources--prompts)
+- [API Reference: MCP Endpoints](/api-reference/platform-api)
+- [Best Practices](/guides/best-practices)
