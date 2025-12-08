@@ -273,6 +273,51 @@ The dashboard shows all your MCP server deployments with:
 - **URL**: Live endpoint for AI agents (when ready)
 - **Endpoints**: Number of API endpoints converted
 
+## Customizing Resources & Prompts
+
+In addition to tools (auto-generated from your OpenAPI spec), you can define custom **Resources** and **Prompts** to enhance how AI agents interact with your MCP server.
+
+### Accessing Customization
+
+1. Find your deployment card in the dashboard
+2. Click the "Customize" or gear icon
+3. Navigate to the **Resources** or **Prompts** tab
+
+### Defining Resources
+
+Resources are read-only data sources that AI agents can access:
+
+- **Name** (required): Unique identifier for the resource
+- **URI** (required): Resource identifier (e.g., `file://config.json`, `https://docs.example.com`)
+- **Title**: Human-readable title
+- **Description**: Explains what the resource contains
+- **MIME Type**: Content type (text/plain, application/json, text/markdown, etc.)
+- **Content**: The actual resource content
+
+### Defining Prompts
+
+Prompts are reusable templates for structured AI interactions:
+
+- **Name** (required): Unique identifier for the prompt
+- **Title**: Human-readable title
+- **Description**: Explains when to use this prompt
+- **Arguments**: Define input parameters (name, type, required flag)
+- **Template**: The prompt template with `{{argument_name}}` placeholders
+
+Example template:
+```
+Summarize the following {{document_type}} in {{language}}:
+
+{{content}}
+```
+
+### Validation Rules
+
+- Resource names and URIs must be unique within a deployment
+- Prompt names must be unique within a deployment
+- Argument names must be unique within a prompt
+- URIs must follow the format: `scheme://path`
+
 ### Deployment Controls
 
 **Start/Stop**

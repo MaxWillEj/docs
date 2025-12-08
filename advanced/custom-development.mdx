@@ -317,7 +317,7 @@ Higher tiers offer:
 
 ### Resource Caching Pattern
 
-Cache expensive API calls:
+Cache expensive resource reads:
 
 ```typescript
 const cache = new Map();
@@ -330,14 +330,32 @@ server.setRequestHandler("resources/read", async (request) => {
     return cache.get(uri);
   }
 
-  // Fetch from API
-  const data = await fetchFromAPI(uri);
+  // Fetch resource from database
+  const { data: resource, error } = await supabase
+    .from("mcp_resources")
+    .select("*")
+    .eq("deployment_id", deploymentId)
+    .eq("uri", uri)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!resource) {
+    return jsonRpcError(id, -32002, "Resource not found", { uri });
+  }
+
+  const result = {
+    contents: [{
+      uri: resource.uri,
+      mimeType: resource.mime_type || "text/plain",
+      text: resource.content || ""
+    }]
+  };
 
   // Cache with TTL
-  cache.set(uri, data);
+  cache.set(uri, result);
   setTimeout(() => cache.delete(uri), 300000); // 5 min TTL
 
-  return data;
+  return result;
 });
 ```
 

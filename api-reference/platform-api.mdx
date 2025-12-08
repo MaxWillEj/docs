@@ -93,7 +93,7 @@ Endpoints for interacting with your deployed MCP servers.
 
 Call a tool on your deployed MCP server.
 
-- **Endpoint**: `POST /mcp-router/{deployment_slug}`
+- **Endpoint**: `POST /mcp-router/{deployment_slug}/messages`
 - **Headers**:
     - __INLINE_CODE_15__: __INLINE_CODE_16__
 
@@ -110,6 +110,165 @@ Call a tool on your deployed MCP server.
     }
   },
   "id": 1
+}
+```
+
+### List Resources
+
+List all resources defined for a deployment.
+
+- **Endpoint**: `POST /mcp-router/{deployment_slug}/messages`
+
+**Request Body:**
+
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "resources/list",
+  "params": {},
+  "id": 1
+}
+```
+
+**Response:**
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "resources": [
+      {
+        "uri": "file://config.json",
+        "name": "config",
+        "title": "Configuration",
+        "description": "Application configuration",
+        "mimeType": "application/json"
+      }
+    ],
+    "nextCursor": null
+  }
+}
+```
+
+### Read Resource
+
+Read content of a specific resource by URI.
+
+- **Endpoint**: `POST /mcp-router/{deployment_slug}/messages`
+
+**Request Body:**
+
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "resources/read",
+  "params": {
+    "uri": "file://config.json"
+  },
+  "id": 1
+}
+```
+
+**Response:**
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "contents": [
+      {
+        "uri": "file://config.json",
+        "mimeType": "application/json",
+        "text": "{\"key\": \"value\"}"
+      }
+    ]
+  }
+}
+```
+
+### List Prompts
+
+List all prompts defined for a deployment.
+
+- **Endpoint**: `POST /mcp-router/{deployment_slug}/messages`
+
+**Request Body:**
+
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "prompts/list",
+  "params": {},
+  "id": 1
+}
+```
+
+**Response:**
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "prompts": [
+      {
+        "name": "summarize",
+        "title": "Summarize Document",
+        "description": "Summarize a document in a specific language",
+        "arguments": [
+          {"name": "content", "required": true},
+          {"name": "language", "required": false}
+        ]
+      }
+    ],
+    "nextCursor": null
+  }
+}
+```
+
+### Get Prompt
+
+Get a specific prompt and render its template with arguments.
+
+- **Endpoint**: `POST /mcp-router/{deployment_slug}/messages`
+
+**Request Body:**
+
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "prompts/get",
+  "params": {
+    "name": "summarize",
+    "arguments": {
+      "content": "This is the document text...",
+      "language": "English"
+    }
+  },
+  "id": 1
+}
+```
+
+**Response:**
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "description": "Summarize a document in a specific language",
+    "messages": [
+      {
+        "role": "user",
+        "content": {
+          "type": "text",
+          "text": "Please summarize this in English:\n\nThis is the document text..."
+        }
+      }
+    ]
+  }
 }
 ```
 
