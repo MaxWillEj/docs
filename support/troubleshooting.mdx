@@ -36,13 +36,48 @@ This guide helps you resolve common issues with the Tydli platform.
   - Ensure file is JSON or YAML format
   - Verify OpenAPI version is 3.0 or higher
   - Check for syntax errors in the specification
+  - **Alternative**: Use "✨ Any Format (AI)" tab to upload PDFs, docs, or other formats
 
 **Issue**: File upload stuck at "Uploading..." 
 - **Cause**: Network timeout or file too large
 - **Solution**:
-  - Check file size (max 10MB)
+  - Check file size (max 10MB for OpenAPI, 5MB for AI processing)
   - Try refreshing the page
   - Use paste method for large specifications
+
+### AI Document Processing Issues
+
+**Issue**: "Documentation quality insufficient" error
+- **Cause**: AI couldn't extract enough structured API information
+- **Solution**:
+  - Ensure your docs include clear HTTP endpoints (GET, POST, etc.)
+  - Add explicit parameter names and types
+  - Specify the base URL of the API
+  - Remove marketing content, focus on technical reference
+  - → [See AI best practices](./AI_DOCUMENT_PROCESSING.md#best-practices-for-success)
+
+**Issue**: "Daily limit reached" message
+- **Cause**: You've used your 5 free AI conversions for today
+- **Solution**:
+  - Wait until midnight (your local time) for reset
+  - Use OpenAPI upload directly if you have a spec (no limit)
+  - Convert to OpenAPI manually using [Swagger Editor](https://editor.swagger.io)
+
+**Issue**: Low confidence score (below 60%)
+- **Cause**: Documentation lacks clear API structure
+- **Solution**:
+  - Review the preview to see what was extracted
+  - Add missing endpoint details to your documentation
+  - Try a different input format (paste vs upload)
+  - Provide cleaner, more technical documentation
+
+**Issue**: AI processing times out
+- **Cause**: Document is too large or complex
+- **Solution**:
+  - Keep files under 5 MB
+  - Extract just the API reference section
+  - Split large documentation into parts
+  - Try pasting key sections instead of uploading
 
 ### Validation Errors
 

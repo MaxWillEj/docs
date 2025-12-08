@@ -142,7 +142,40 @@ Here are the users: ...
 
 ## Uploading API Specifications
 
-### Method 1: File Upload
+Tydli supports multiple ways to get your API into an MCP server. Choose the method that works best for your documentation.
+
+### Method 1: AI Document Processing (✨ Recommended for Most Users)
+
+**Don't have an OpenAPI spec? No problem!** Our AI can analyze any API documentation and automatically generate everything you need.
+
+**Supported Formats**
+- 📄 **PDF** — Official API documentation, generated docs
+- 📝 **Word (.docx)** — Internal API documentation  
+- 📋 **Markdown (.md)** — GitHub READMEs, developer docs
+- 📃 **Plain Text (.txt)** — Simple API references
+- 🌐 **HTML (.html)** — Saved web documentation
+- 📊 **JSON/YAML** — Partial specs, config files
+
+**How to Use**
+1. Click the **"✨ Any Format (AI)"** tab
+2. Choose your input method:
+   - **File Upload** — Drag and drop or browse for files (max 5 MB)
+   - **Paste Text** — Copy documentation from any source
+   - **From URL** — Link to GitHub READMEs or documentation pages
+3. Click **"Generate MCP Server with AI"**
+4. Review the AI's extraction (confidence score, endpoints found)
+5. Deploy your MCP server!
+
+**Daily Limits**
+- 5 free AI conversions per day
+- Resets at midnight (your local time)
+- [Learn more about AI processing →](/ai-document-processing)
+
+---
+
+### Method 2: OpenAPI File Upload
+
+**Best for:** Teams with existing OpenAPI/Swagger specifications
 
 **Supported Formats**
 - `.json` files (OpenAPI JSON format)
