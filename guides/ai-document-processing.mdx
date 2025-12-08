@@ -1,0 +1,393 @@
+---
+title: AI Document Processing
+description: Convert any API documentation to MCP servers with AI
+icon: sparkles
+---
+# AI Document Processing: Any Format to MCP
+
+> **Don't have an OpenAPI spec? No problem.**  
+> Upload any API documentation—PDFs, HTML pages, plain text, even screenshots of documentation—and our AI will analyze it and generate a working MCP server for you.
+
+---
+
+## The Magic in 60 Seconds
+
+1. **Upload anything** → PDF manual, HTML docs, Markdown README, pasted text
+2. **AI analyzes** → Extracts endpoints, parameters, authentication
+3. **OpenAPI generated** → Clean, valid specification created automatically
+4. **MCP deployed** → Working server ready for Claude in under a minute
+
+No coding. No manual conversion. Just upload and go.
+
+---
+
+## Supported Input Methods
+
+### 📁 File Upload
+
+| Format | Extension | Best For |
+|--------|-----------|----------|
+| **PDF** | `.pdf` | Official API documentation, generated docs |
+| **Word** | `.docx` | Internal API documentation |
+| **Markdown** | `.md` | GitHub READMEs, developer docs |
+| **Plain Text** | `.txt` | Simple API references, notes |
+| **JSON** | `.json` | Existing partial specs, config files |
+| **YAML** | `.yaml`, `.yml` | Kubernetes configs, partial OpenAPI |
+| **HTML** | `.html` | Saved web documentation |
+
+**File limits:**
+- Maximum size: **5 MB** per file
+- Recommended: Under 1 MB for fastest processing
+
+---
+
+### 📋 Paste Text
+
+Copy and paste documentation directly from:
+- API documentation websites
+- Developer portal pages
+- README files
+- Chat messages or emails describing the API
+- Code comments with endpoint details
+
+**Pro tip:** When pasting from websites, include the base URL and any authentication details you see.
+
+---
+
+### 🔗 From URL
+
+Enter a URL to any publicly accessible API documentation:
+- GitHub README files
+- GitBook or ReadTheDocs pages
+- Swagger UI documentation pages
+- Any webpage describing an API
+
+**Works with:**
+```
+https://github.com/company/repo/blob/main/README.md
+https://docs.example.com/api-reference
+https://api.example.com/docs/getting-started
+```
+
+**Doesn't work with:**
+- Pages requiring login
+- JavaScript-heavy SPAs that don't render content
+- Private documentation behind authentication
+
+---
+
+## How It Works
+
+### Step 1: Upload Your Documentation
+
+Choose your input method and provide your API documentation:
+
+![Input Selection]
+1. Click the **"✨ Any Format (AI)"** tab
+2. Select **File Upload**, **Paste Text**, or **From URL**
+3. Provide your documentation
+
+### Step 2: AI Analysis
+
+Our AI reads your documentation and extracts:
+
+- **API Title & Description** — What the API does
+- **Base URL** — Where the API lives
+- **Endpoints** — All available operations (GET, POST, PUT, DELETE)
+- **Parameters** — Required and optional inputs for each endpoint
+- **Authentication** — API keys, OAuth, Bearer tokens
+- **Response Schemas** — What the API returns
+
+### Step 3: Review & Confidence Score
+
+The AI shows you what it found:
+
+- **Confidence Score** — How certain the AI is about the extraction
+  - 🟢 **80%+**: High confidence, likely accurate
+  - 🟡 **60-79%**: Medium confidence, review suggested
+  - 🔴 **Below 60%**: Low confidence, may need manual adjustment
+  
+- **Extracted Endpoints** — Preview of discovered API operations
+- **Authentication Type** — What auth method was detected
+
+### Step 4: Generate & Deploy
+
+If everything looks good:
+1. Click **"Generate MCP Server"**
+2. Wait 20-40 seconds for deployment
+3. Your MCP server is live and ready for Claude!
+
+---
+
+## Your Daily Limits
+
+| What | Limit | Resets |
+|------|-------|--------|
+| AI Conversions | **5 per day** | Midnight (your local time) |
+| File Size | **5 MB** max | — |
+| Content Length | **~400,000 characters** | — |
+
+### When You've Hit Your Limit
+
+The button will show "Limit Reached" with a countdown to reset.
+
+**Options:**
+1. **Wait** — Limits reset at midnight in your timezone
+2. **Use OpenAPI** — If you have an OpenAPI spec, upload directly (no limit)
+3. **Contact us** — Need more? Let us know about your use case
+
+---
+
+## Best Practices for Success
+
+### ✅ Documentation That Works Great
+
+The AI excels when your documentation includes:
+
+1. **Clear HTTP endpoints**
+   ```
+   GET /users - Retrieve all users
+   POST /users - Create a new user
+   GET /users/{id} - Get user by ID
+   ```
+
+2. **Explicit parameters**
+   ```
+   Parameters:
+   - page (integer, optional): Page number for pagination
+   - limit (integer, optional): Items per page (max 100)
+   ```
+
+3. **Base URL specified**
+   ```
+   Base URL: https://api.example.com/v1
+   ```
+
+4. **Authentication documented**
+   ```
+   Authentication: API Key in header
+   Header: X-API-Key: your-api-key
+   ```
+
+5. **Response examples**
+   ```json
+   {
+     "id": "user_123",
+     "email": "user@example.com",
+     "created_at": "2024-01-15T10:30:00Z"
+   }
+   ```
+
+### ⚠️ Documentation That May Struggle
+
+The AI might have difficulty with:
+
+- **SDK documentation only** — Code samples without REST endpoints
+- **Very vague descriptions** — "Call the API to get data"
+- **No endpoint URLs** — Just function names without HTTP methods
+- **Marketing materials** — Product pages without technical details
+- **Heavily image-based docs** — Screenshots instead of text
+
+### 🎯 Quick Improvements
+
+If the AI confidence is low, try adding:
+
+```markdown
+## API Reference
+
+Base URL: https://api.yourservice.com/v1
+
+Authentication: Bearer token in Authorization header
+
+### Endpoints
+
+#### GET /items
+Get all items.
+- Query params: limit (int), offset (int), status (string)
+- Returns: Array of item objects
+
+#### POST /items
+Create a new item.
+- Body: { "name": string, "price": number }
+- Returns: Created item object
+
+#### GET /items/{id}
+Get item by ID.
+- Path param: id (required)
+- Returns: Item object
+```
+
+---
+
+## Troubleshooting
+
+### "Documentation quality insufficient"
+
+**What it means:** The AI couldn't extract enough structured API information.
+
+**How to fix:**
+1. **Add more detail** — Include explicit endpoints with HTTP methods
+2. **Specify the base URL** — Tell the AI where the API lives
+3. **List parameters** — Name each parameter with its type
+4. **Try different input** — Upload a different doc or paste text directly
+
+### "Daily limit reached"
+
+**What it means:** You've used your 5 free AI conversions today.
+
+**How to fix:**
+1. **Wait for reset** — Limits reset at midnight (your timezone)
+2. **Use OpenAPI instead** — Direct OpenAPI upload has no daily limit
+3. **Convert manually** — Use [Swagger Editor](https://editor.swagger.io) to create a spec
+
+### "AI service temporarily at capacity"
+
+**What it means:** Our AI processing system is experiencing high demand.
+
+**How to fix:**
+1. **Wait a moment** — Try again in 30-60 seconds
+2. **Try during off-peak hours** — Early morning or late evening
+3. **Use OpenAPI directly** — Bypass AI by uploading an existing spec
+
+### "File too large"
+
+**What it means:** Your file exceeds the 5 MB limit.
+
+**How to fix:**
+1. **Extract key sections** — Copy/paste the API reference section only
+2. **Use URL instead** — Link to documentation rather than uploading
+3. **Split the document** — Process large APIs in sections
+
+### Low Confidence Score (Below 60%)
+
+**What it means:** The AI is uncertain about what it extracted.
+
+**How to fix:**
+1. **Review the preview** — Check if endpoints look correct
+2. **Add missing info** — Edit the generated spec before deploying
+3. **Provide cleaner input** — Remove marketing content, focus on technical details
+4. **Try a different format** — Some formats work better than others
+
+---
+
+## Frequently Asked Questions
+
+### Can I edit the generated OpenAPI spec?
+
+Yes! After AI analysis, you'll see a preview of the generated specification. You can:
+- Review extracted endpoints
+- Verify parameter types
+- Check authentication settings
+
+For advanced edits, copy the generated JSON and modify it before deploying.
+
+### What if the AI misses some endpoints?
+
+If endpoints are missing:
+1. Deploy what was found first
+2. Manually create a complete OpenAPI spec for missing endpoints
+3. Create a second deployment with the additional endpoints
+
+Or, enhance your input documentation with clearer endpoint definitions and try again.
+
+### Does AI processing count against my rate limits?
+
+The AI conversion uses your **daily AI quota** (5 per day), which is separate from your MCP server request limits. Once deployed, MCP servers use your normal request quota.
+
+### Can I process multiple APIs at once?
+
+Currently, AI processing works on one document at a time. For multiple APIs:
+1. Process each API separately
+2. Create individual MCP deployments
+3. Configure each in Claude Desktop
+
+### What data does the AI see?
+
+The AI processes:
+- Your uploaded documentation content
+- Any URLs you provide for fetching
+
+We do **not** store your documentation after processing. Generated OpenAPI specs are saved only in your deployment.
+
+### Is there a way to improve AI accuracy?
+
+Yes! The AI works best with:
+1. **Structured documentation** — Clear headings, tables, code blocks
+2. **Technical focus** — API reference sections rather than marketing
+3. **Explicit examples** — Request/response samples help a lot
+4. **Standard terminology** — REST conventions, HTTP method names
+
+---
+
+## Examples: What Works Best
+
+### Great Input: GitHub README
+
+```markdown
+# Payments API
+
+Base URL: `https://api.payments.io/v2`
+
+## Authentication
+Include your API key in the header:
+```
+X-API-Key: your_key_here
+```
+
+## Endpoints
+
+### Create Payment
+`POST /payments`
+
+**Request Body:**
+```json
+{
+  "amount": 1000,
+  "currency": "USD",
+  "customer_id": "cus_123"
+}
+```
+
+### Get Payment
+`GET /payments/{id}`
+
+Returns payment details.
+```
+
+**Result:** High confidence, accurate extraction ✅
+
+---
+
+### Okay Input: Text Description
+
+```
+Our API lets you manage users. You can create users with POST to /api/users, 
+get a user with GET /api/users/id, and delete with DELETE /api/users/id.
+The base URL is https://myapp.com. Use an API key in the X-Key header.
+```
+
+**Result:** Medium confidence, basic extraction ⚠️
+
+---
+
+### Difficult Input: Vague Description
+
+```
+The system provides user management capabilities through our RESTful interface.
+Contact support for API access credentials.
+```
+
+**Result:** Low confidence, insufficient detail ❌
+
+---
+
+## Still Need Help?
+
+- 📚 **[Troubleshooting Guide](/support/troubleshooting)** — General platform issues
+- ❓ **[FAQ](/support/faq)** — Common questions answered
+- 📖 **[User Guide](/guides/user-guide)** — Complete platform documentation
+- 💬 **[Contact Support](https://tydli.io/contact)** — We're here to help!
+
+---
+
+*AI Document Processing is continuously improving. Have feedback? We'd love to hear what documentation formats work well for you.*
