@@ -282,11 +282,51 @@ Yes! Submit feature requests through the contact form or GitHub repository. Incl
 
 ### What are MCP Resources and Prompts?
 
-**Resources** let you provide curated data and documentation to AI agents - like API docs, configuration files, or reference materials. They are read-only data sources that AI agents can access via the `resources/read` method.
+**Resources** give AI agents background knowledge about your API — like giving an assistant your employee handbook before their first day. They're read-only reference materials (API docs, configuration schemas, error code lists) that AI agents can read via `resources/read` to make smarter decisions.
 
-**Prompts** are reusable templates for common AI interactions. They support arguments for dynamic content and help AI agents work more effectively with your MCP server by providing structured interaction patterns.
+**Prompts** are ready-to-use commands AI agents can execute immediately — like pre-written scripts for common tasks. They're templates with placeholders (e.g., `{{customer_id}}`) that get filled in at runtime.
 
-Both Resources and Prompts can be configured in the MCP Customization Modal for each deployment, giving you full control over how AI agents interact with your server.
+Both are optional but dramatically improve AI accuracy and efficiency with your API.
+
+### When should I use Resources vs Prompts?
+
+| Use Resources When... | Use Prompts When... |
+|----------------------|---------------------|
+| You have **static reference data** | You need **dynamic templates** |
+| AI needs to **read information** | AI needs **interaction patterns** |
+| Examples: docs, configs, schemas | Examples: email templates, report formats |
+
+**Quick Rule:** 
+- "Does AI need to **read** this?" → Resource  
+- "Does AI need to **use** this as a template?" → Prompt
+
+### How many Resources and Prompts should I create?
+
+Start small — 3-5 of each is usually enough. Focus on:
+- **Resources:** The information AI agents ask for most often
+- **Prompts:** Your most common interaction patterns
+
+You can always add more later based on usage patterns.
+
+### Can I update Resources and Prompts after deployment?
+
+Yes! Changes take effect immediately. The AI agent will see updated content on the next request. No redeployment needed.
+
+### Do Resources and Prompts work with all AI agents?
+
+Yes — any AI agent that supports the MCP protocol (Claude, ChatGPT with MCP support, custom agents) can use them. The AI agent automatically discovers available resources and prompts via `resources/list` and `prompts/list`.
+
+### What's the difference between a Resource and just putting info in my API docs?
+
+**Resources are AI-readable** — they're structured data the AI can programmatically access and reference during conversations. API docs are human-readable but harder for AI to parse reliably. Resources give AI agents instant, reliable access to exactly the information they need.
+
+### Can I use Resources for dynamic data?
+
+No — Resources are for **static reference data**. For dynamic data (like current inventory levels or user profiles), use your API endpoints (Tools). Resources are best for documentation, schemas, rules, and configuration that don't change frequently.
+
+### How do I know if my Prompt template is working?
+
+Test it using the API Reference examples. Call `prompts/get` with sample arguments and verify the rendered output looks correct. You can also check deployment logs to see when prompts are being accessed.
 
 ### Where can I learn more about MCP?
 

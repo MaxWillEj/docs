@@ -55,6 +55,7 @@
           "guides/oauth-integration",
           "guides/gallery",
           "guides/optimizing-openapi",
+          "guides/resources-prompts-use-cases",
           "guides/use-cases",
           "guides/best-practices"
         ]

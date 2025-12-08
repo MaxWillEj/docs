@@ -277,46 +277,247 @@ The dashboard shows all your MCP server deployments with:
 
 In addition to tools (auto-generated from your OpenAPI spec), you can define custom **Resources** and **Prompts** to enhance how AI agents interact with your MCP server.
 
+### Why Use Resources & Prompts?
+
+**Resources** solve the "context problem" — AI agents often need background information that isn't in your API:
+- ✅ API documentation and usage guidelines
+- ✅ Configuration schemas and valid values
+- ✅ Business rules and validation logic
+- ✅ Reference data (country codes, status values, error codes, etc.)
+
+**Prompts** solve the "consistency problem" — standardize how AI agents interact with your API:
+- ✅ Ensure proper error handling patterns
+- ✅ Maintain consistent output formatting
+- ✅ Guide complex multi-step workflows
+- ✅ Enforce business logic in AI interactions
+
+**Example Impact:**
+| Without | With |
+|---------|------|
+| AI agent calls wrong endpoint because it doesn't understand your API structure | AI agent reads your API docs resource and makes correct calls every time |
+| AI agent formats responses inconsistently | AI agent uses your "format_response" prompt template for consistent output |
+| AI agent doesn't know your business rules | AI agent reads your "business-rules" resource and validates requests correctly |
+
+### Resources vs Prompts: When to Use Which?
+
+| Use Resources When... | Use Prompts When... |
+|----------------------|---------------------|
+| You have **static reference data** | You need **dynamic templates** |
+| AI needs to **read information** | AI needs **interaction patterns** |
+| Content rarely changes | Content varies by context |
+| Examples: docs, configs, schemas | Examples: email templates, report formats |
+
+**Quick Decision:**
+- 📖 "Does the AI need to **read** this?" → **Resource**
+- 📝 "Does the AI need to **use** this as a template?" → **Prompt**
+
 ### Accessing Customization
 
 1. Find your deployment card in the dashboard
-2. Click the "Customize" or gear icon
-3. Navigate to the **Resources** or **Prompts** tab
+2. Click the **"Customize"** button (gear icon)
+3. Navigate to the **Resources** or **Prompts** tab (marked with "NEW" badges!)
 
 ### Defining Resources
 
 Resources are read-only data sources that AI agents can access:
 
-- **Name** (required): Unique identifier for the resource
-- **URI** (required): Resource identifier (e.g., `file://config.json`, `https://docs.example.com`)
-- **Title**: Human-readable title
-- **Description**: Explains what the resource contains
-- **MIME Type**: Content type (text/plain, application/json, text/markdown, etc.)
-- **Content**: The actual resource content
+| Field | Required | Description |
+|-------|----------|-------------|
+| **Name** | ✅ | Unique identifier (lowercase with hyphens, e.g., `api-guide`) |
+| **URI** | ✅ | Resource identifier (e.g., `file://docs/guide.md`) |
+| **Title** | | Human-readable title shown to users |
+| **Description** | | Explains what the resource contains and when to use it |
+| **MIME Type** | | Content type (`text/markdown`, `application/json`, etc.) |
+| **Content** | | The actual resource content (Markdown supported) |
+
+#### Resource Examples
+
+**Example 1: API Rate Limits**
+```json
+{
+  "name": "rate-limits",
+  "uri": "file://docs/rate-limits.md",
+  "title": "API Rate Limits",
+  "description": "Current rate limiting rules - read this before making bulk requests",
+  "mime_type": "text/markdown",
+  "content": "## Rate Limits\n\n- **Free tier:** 100 requests/hour\n- **Pro tier:** 1000 requests/hour\n- **Header:** Check `X-RateLimit-Remaining`\n- **Retry:** Use `Retry-After` header value"
+}
+```
+**Result:** AI agents will automatically respect rate limits and handle 429 errors correctly.
+
+**Example 2: Configuration Schema**
+```json
+{
+  "name": "config-schema",
+  "uri": "file://schemas/config.json",
+  "title": "Valid Configuration Options",
+  "description": "JSON schema for configuration objects - reference this when creating configs",
+  "mime_type": "application/json",
+  "content": "{\"type\":\"object\",\"properties\":{\"environment\":{\"enum\":[\"dev\",\"staging\",\"prod\"]},\"timeout\":{\"type\":\"number\",\"minimum\":1000,\"maximum\":30000}}}"
+}
+```
+**Result:** AI agents will only suggest valid configuration values.
+
+**Example 3: Error Code Reference**
+```json
+{
+  "name": "error-codes",
+  "uri": "file://docs/errors.md",
+  "title": "Error Code Reference",
+  "description": "Complete list of error codes and their meanings",
+  "mime_type": "text/markdown",
+  "content": "## Error Codes\n\n| Code | Meaning | Action |\n|------|---------|--------|\n| 4001 | Invalid email | Check email format |\n| 4002 | User exists | Try login instead |\n| 5001 | Database error | Retry in 5 seconds |"
+}
+```
+**Result:** AI agents can explain error codes to users in plain language.
 
 ### Defining Prompts
 
 Prompts are reusable templates for structured AI interactions:
 
-- **Name** (required): Unique identifier for the prompt
-- **Title**: Human-readable title
-- **Description**: Explains when to use this prompt
-- **Arguments**: Define input parameters (name, type, required flag)
-- **Template**: The prompt template with `{{argument_name}}` placeholders
+| Field | Required | Description |
+|-------|----------|-------------|
+| **Name** | ✅ | Unique identifier (lowercase with hyphens) |
+| **Title** | | Human-readable title |
+| **Description** | | Explains when to use this prompt |
+| **Arguments** | | Input parameters with name, required flag, description |
+| **Template** | ✅ | The prompt text with `{{argument_name}}` placeholders |
 
-Example template:
-```
-Summarize the following {{document_type}} in {{language}}:
+#### Prompt Examples
 
-{{content}}
+**Example 1: Error Response Formatter**
+```json
+{
+  "name": "format-error",
+  "title": "Format Error Response",
+  "description": "Convert API errors into user-friendly messages",
+  "arguments": [
+    {"name": "error_code", "required": true, "description": "The error code from API"},
+    {"name": "error_message", "required": true, "description": "Raw error message"},
+    {"name": "user_action", "required": false, "description": "Suggested fix"}
+  ],
+  "template": "❌ Error {{error_code}}: {{error_message}}\n\n{{#if user_action}}💡 What to do: {{user_action}}{{/if}}"
+}
 ```
+**Result:** All error messages follow the same friendly format.
+
+**Example 2: Multi-Step Workflow Guide**
+```json
+{
+  "name": "create-user-workflow",
+  "title": "Create User Workflow",
+  "description": "Step-by-step guide for creating a new user correctly",
+  "arguments": [
+    {"name": "email", "required": true, "description": "User's email address"},
+    {"name": "role", "required": true, "description": "User role (admin, member, viewer)"}
+  ],
+  "template": "To create user {{email}} with role {{role}}:\n\n1. First, call POST /users/validate with email={{email}}\n2. If validation passes, call POST /users with {email, role}\n3. Then call POST /users/{id}/send-welcome-email\n4. Finally, return the user ID and confirmation"
+}
+```
+**Result:** AI agents follow the correct sequence every time.
+
+**Example 3: Summary Generator**
+```json
+{
+  "name": "summarize-orders",
+  "title": "Summarize Customer Orders",
+  "description": "Generate a summary of recent orders for a customer",
+  "arguments": [
+    {"name": "customer_id", "required": true, "description": "Customer's unique ID"},
+    {"name": "days", "required": false, "description": "Number of days to look back (default: 30)"}
+  ],
+  "template": "Fetch orders for customer {{customer_id}} from the last {{days}} days and provide:\n\n1. Total number of orders\n2. Total spend\n3. Most ordered products\n4. Average order value"
+}
+```
+**Result:** Consistent, structured order summaries every time.
+
+### How AI Agents Use Resources & Prompts
+
+#### Resources Flow
+```
+1. User asks: "What are the rate limits for this API?"
+2. AI agent calls: resources/list → sees "rate-limits" resource
+3. AI agent calls: resources/read with URI file://docs/rate-limits.md
+4. AI agent reads the content and responds with accurate information
+```
+**You don't need to do anything** — the AI agent handles this automatically!
+
+#### Prompts Flow
+```
+1. User asks: "Send an error message about invalid email"
+2. AI agent calls: prompts/list → sees "format-error" prompt
+3. AI agent calls: prompts/get with arguments {error_code: "4001", error_message: "Email format invalid"}
+4. AI agent receives formatted template and presents it to user
+```
+**You control the template** — the AI agent just fills in the blanks!
 
 ### Validation Rules
 
 - Resource names and URIs must be unique within a deployment
 - Prompt names must be unique within a deployment
 - Argument names must be unique within a prompt
-- URIs must follow the format: `scheme://path`
+- URIs must follow the format: `scheme://path` (e.g., `file://docs/guide.md`)
+
+### Common Issues & Solutions
+
+#### "AI agent isn't using my resources"
+
+**Possible Causes:**
+- ✗ Resource name isn't descriptive enough (use clear names like `api-documentation` not `doc1`)
+- ✗ Description doesn't explain when to use it (add context: "Read this for rate limit information")
+- ✗ Content is too long (keep under 10KB for best performance)
+
+**Solution:** Make your resource names and descriptions very explicit about their purpose.
+
+#### "Prompt template isn't rendering correctly"
+
+**Possible Causes:**
+- ✗ Argument names don't match template placeholders (check `{{spelling}}`)
+- ✗ Required arguments aren't marked as required
+- ✗ Template has unmatched brackets
+
+**Solution:** Test your prompt with sample arguments using the API Reference examples.
+
+#### "Too many resources/prompts"
+
+**Best Practice:** Start with 3-5 of each. Too many options can slow down AI discovery.
+
+**Recommendation:**
+- **Resources:** Focus on the most critical reference data
+- **Prompts:** Create templates for your most common interactions
+
+### Limits & Best Practices
+
+#### Practical Limits
+
+| Item | Recommended | Maximum |
+|------|-------------|---------|
+| Resources per deployment | 5-10 | No hard limit |
+| Prompts per deployment | 3-8 | No hard limit |
+| Resource content size | < 10 KB | 1 MB |
+| Prompt template length | < 500 chars | 10,000 chars |
+| Arguments per prompt | 2-5 | 20 |
+
+#### Best Practices
+
+**Resources:**
+- ✅ **DO** use descriptive names: `api-authentication-guide` not `auth`
+- ✅ **DO** keep content focused and concise
+- ✅ **DO** use Markdown for better readability
+- ❌ **DON'T** duplicate information that's already in your OpenAPI spec
+- ❌ **DON'T** include sensitive data (credentials, keys, secrets)
+
+**Prompts:**
+- ✅ **DO** use clear placeholder names: `{{user_email}}` not `{{x}}`
+- ✅ **DO** provide example values in descriptions
+- ✅ **DO** mark truly required arguments as required
+- ❌ **DON'T** create overly complex templates (split into multiple prompts)
+- ❌ **DON'T** hardcode values that should be arguments
+
+**Naming Conventions:**
+- Use lowercase with hyphens: `user-creation-guide`
+- Be specific: `stripe-webhook-handler` not `handler`
+- Include context: `production-config` vs `dev-config`
 
 ### Deployment Controls
 
