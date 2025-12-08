@@ -37,6 +37,20 @@ You're building a **remote MCP server** to be used as a **custom connector** in 
 - `initialize` - Session initialization
 - `tools/list` - List available tools
 - `tools/call` - Execute a tool
+- `resources/list` - List user-defined resources
+- `resources/templates/list` - List resource templates
+- `resources/read` - Read resource content by URI
+- `prompts/list` - List user-defined prompts
+- `prompts/get` - Get prompt and render template with arguments
+
+### Pagination
+Pagination fields (`cursor`, `nextCursor`) are accepted but not implemented.
+All list operations return `nextCursor: null`.
+
+### Unsupported Sub-Capabilities
+- `resources/subscribe` - Returns `-32601` (not supported)
+- `resources/listChanged` - Not implemented
+- `prompts/listChanged` - Not implemented
 
 ### Authentication ✅
 - OAuth 2.1 with PKCE support
@@ -97,9 +111,9 @@ You're building a **remote MCP server** to be used as a **custom connector** in 
 | `server_info.name` | Required | ✅ `{slug}-mcp-server` | ✅ PASS |
 | `server_info.version` | Required | ✅ `0.1.0` | ✅ PASS |
 | `server_info.description` | Required | ✅ Tool count included | ✅ PASS |
-| `capabilities.tools` | Required | ✅ Dynamic based on OpenAPI | ✅ PASS |
-| `capabilities.resources` | Required | ✅ `false` | ✅ PASS |
-| `capabilities.prompts` | Required | ✅ `false` | ✅ PASS |
+| `capabilities.tools` | Required | ✅ `{}` (object format) | ✅ PASS |
+| `capabilities.resources` | Required | ✅ `{}` (object format) | ✅ PASS |
+| `capabilities.prompts` | Required | ✅ `{}` (object format) | ✅ PASS |
 | `endpoints.messages` | **CRITICAL** | ✅ Full HTTPS URL | ✅ PASS |
 | `authentication` metadata | Required | ✅ Dynamic (oauth/jwt/none) | ✅ PASS |
 | Public access (no auth) | **CRITICAL** | ✅ Moved before auth layer | ✅ PASS |
@@ -147,7 +161,10 @@ You're building a **remote MCP server** to be used as a **custom connector** in 
     "protocolVersion": "2025-03-26",
     "capabilities": {
       "tools": {},
-      "logging": {}
+      "resources": {},
+      "prompts": {},
+      "logging": {},
+      "streaming": true
     },
     "serverInfo": {
       "name": "{slug}-mcp-server",
@@ -222,13 +239,13 @@ You're building a **remote MCP server** to be used as a **custom connector** in 
 **Error Response Format:**
 ```typescript
 {
-  "jsonrpc": "2.0",
+  "jsonrpc": "2.0", 
   "id": "<preserved or null>",
   "error": {
     "code": -32601,
     "message": "Method not found: unknown_method",
     "data": {
-      "supported_methods": ["initialize", "tools/list", "tools/call"]
+      "supported_methods": ["initialize", "tools/list", "tools/call", "resources/list", "resources/templates/list", "resources/read", "prompts/list", "prompts/get"]
     }
   }
 }
@@ -346,9 +363,11 @@ Returns PLAIN JSON (optimized for Claude Connectors):
     "description": "MCP server for Example API - 23 tools available"
   },
   "capabilities": {
-    "tools": true,
-    "resources": false,
-    "prompts": false
+    "tools": {},
+    "resources": {},
+    "prompts": {},
+    "logging": {},
+    "streaming": true
   },
   "endpoints": {
     "messages": "https://nqfciqtsrcjorlqcglmq.supabase.co/functions/v1/mcp-router/example/messages"
