@@ -13,127 +13,105 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.2.0] - 2025-12-09
 
 ### Added
-- **Public Gallery Access**: Non-authenticated users can now browse and view gallery MCP servers
-- **Gallery Deployment Validation**: Backend validates endpoint availability before allowing deployments
-- **Improved Error Messages**: User-friendly error handling for unavailable gallery items
+- **Public Gallery Access**: Browse and explore MCP servers without signing in
+- **Improved Error Messages**: Clearer feedback when deploying gallery items
 
 ### Fixed
-- **Gallery RLS Policy**: Added "Public can view gallery template deployments" policy for anonymous access
-- **Deploy Button Error Handling**: Better feedback when MCP server isn't available for deployment
-
-### Security
-- Database RLS policies now properly allow public read access to gallery templates while protecting private deployments
+- Gallery items now properly accessible to all visitors
+- Better handling of unavailable MCP servers
 
 ---
 
 ## [1.1.0] - 2025-11-19
 
 ### Added
-- **Admin Signup Notifications**: Secure JWT-authenticated edge function notifies admins of new signups
-- **Security Trust Badge**: Dashboard displays real-time security status with encryption confirmation
-- **Admin Security Dashboard**: Comprehensive security monitoring UI for admin users
-- **Service Role Audit Logging**: All service role usage tracked in `security_audit_log` table
-
-### Fixed
-- **CRIT-001**: Async auth callback race condition in useAuth hook
-- **CRIT-002**: Missing `refresh_token_hash` column in OAuth refresh tokens table
-- **CRIT-003**: OAuth state parameter CSRF vulnerability - now validates state in POST /authorize
-- **CRIT-004**: Auth-login information disclosure (CWE-209) - sanitized error messages
-- **CRIT-005**: OAuth authorization codes now deleted after use per RFC 6749
-
-### Security
-- Achieved zero critical vulnerabilities (5 critical issues resolved)
-- Security posture improved from 5.0/10 to 8.0/10
-- All OAuth 2.1 flows now compliant with RFC 6749 and RFC 7636
+- **Security Trust Badge**: Dashboard displays real-time security status
+- **Enhanced Admin Tools**: Improved moderation and monitoring capabilities
 
 ### Changed
-- Email verification switched to Supabase built-in system (eliminated duplicate emails)
-- Admin role checks now use server-side `has_role()` RPC instead of client-side queries
+- Email verification now uses streamlined built-in system
+- Improved OAuth authentication flows
+
+### Security
+- Enhanced protection for all authentication flows
+- Improved audit logging and monitoring
 
 ---
 
 ## [1.0.1] - 2025-11-10
 
 ### Added
-- **Analytics Dashboard**: Real-time insights into MCP server usage, performance, and errors
-  - 4 key metric cards: Total Requests, Success Rate, Avg Response Time, Failed Requests
-  - 3 interactive charts: Tool Usage (bar), Performance Trends (line), Error Rate (area)
-  - Deployment selector and time range filters (24h/7d/30d)
-- **MCP Resources & Prompts**: Progressive disclosure UX for advanced MCP features
-- **Onboarding Wizard**: 5-step guided setup with sample API deployment
-- **IP Rate Limiting MVP**: Per-IP rate limits with plan-based configuration
+- **Analytics Dashboard**: Real-time insights into MCP server usage and performance
+  - Key metrics: Total Requests, Success Rate, Response Time, Error Rate
+  - Interactive charts for Tool Usage, Performance Trends, and Errors
+  - Time range filters (24h, 7d, 30d)
+- **MCP Resources & Prompts**: Add background knowledge and conversation starters to your MCP servers
+- **Onboarding Wizard**: Guided 5-step setup to deploy your first MCP server
+- **IP Rate Limiting**: Per-IP protection against abuse
 
 ### Fixed
-- **React Performance**: Added useCallback/useMemo optimizations across Dashboard, Auth, and Gallery components
-- **Gallery Admin N+1 Query**: Single JOIN query replaces separate database calls per item
-- **Duplicate FK Constraint**: Removed conflicting `fk_gallery_items_deployment` constraint
-
-### Changed
-- Documentation consolidated - USER_GUIDE.md references OAUTH_INTEGRATION_GUIDE.md
-- OAuth refresh tokens fully implemented (no longer "prepared for future use")
+- Improved performance across Dashboard and Gallery
+- Better loading states and error handling
 
 ---
 
 ## [1.0.0] - 2025-11-01
 
-### Added
-- **MCP Protocol 2025-03-26 Compliance**: Full support for MCP specification
-- **OAuth 2.1 with PKCE**: Complete OAuth 2.1 authorization server with PKCE (S256) support
-- **AI Document Processor**: Convert PDF, Word, and other documents to OpenAPI specs using AI
-- **Three Authentication Methods**: OAuth 2.1, JWT, and public access modes
-- **Credential Encryption**: AES-256-GCM encryption for API credentials
-- **Rate Limiting**: Per-user hourly and monthly rate limits with quota enforcement
-- **Usage Analytics**: Detailed request tracking, tool invocation logs, and performance metrics
-- **Deployment Logs**: Structured logging with info, warn, and error levels
-- **Security Events**: Comprehensive audit log for authentication and security events
-- **MCP Router**: Dynamic routing to deployed MCP servers with authentication
-- **Claude Desktop Integration**: Native support for Claude Desktop MCP clients
-- **Gallery System**: Browse, deploy, and submit MCP servers to public gallery
-- **Admin Panel**: Gallery moderation with approve/reject workflow
-- **Bulk Upload**: Admin bulk upload of API documentation with AI processing
+### Core Features
 
-### Security
-- **Row Level Security (RLS)**: Enforced on all database tables
-- **Encrypted Credentials**: AES-256-GCM encryption via pgcrypto
-- **OAuth Token Security**: 1-hour access token expiration, revocation support
-- **PKCE Enforcement**: S256 code challenge method required for OAuth flows
-- **Audit Logging**: All security events logged to `security_events` table
+#### AI Document Processing
+- **Any Format Support**: Upload PDF, Word, HTML, Markdown, or paste text
+- **Automatic Conversion**: AI analyzes documentation and generates OpenAPI specs
+- **Instant MCP Creation**: Go from API docs to working MCP server in seconds
 
-### Performance
-- **Hybrid OpenAPI Storage**: Small specs in database, large specs (8000+ keys) in storage
-- **Fast Generation**: MCP server generation in 10-20 seconds
-- **Quick Deployment**: End-to-end deployment in 20-40 seconds
-- **Database Indexes**: Optimized indexes on all major tables
+#### MCP Server Deployment
+- **One-Click Deploy**: Transform OpenAPI specs into MCP servers instantly
+- **Claude Desktop Integration**: Native support for Claude Desktop
+- **Multiple Auth Methods**: OAuth 2.1, JWT, API Key, or public access
+- **Custom Instructions**: Add server instructions, tool descriptions, and parameter hints
+
+#### Gallery
+- **Explore Pre-Built MCPs**: Browse community MCP servers for popular APIs
+- **One-Click Clone**: Deploy any gallery item to your account
+- **Submit Your Own**: Share your MCP servers with the community
+- **Categories & Tags**: Find MCPs by category, use case, or search
+
+#### Authentication & Security
+- **OAuth 2.1 with PKCE**: Industry-standard secure authentication
+- **AES-256 Encryption**: Bank-level encryption for all credentials
+- **Automatic Token Refresh**: Seamless long-term access without re-auth
+- **Row Level Security**: Your data is isolated and protected
+
+#### Analytics & Monitoring
+- **Usage Dashboard**: Track requests, success rates, and performance
+- **Tool Invocation Logs**: See exactly how your MCP is being used
+- **Deployment Logs**: Debug issues with structured logging
+- **Rate Limit Monitoring**: Stay within your plan limits
+
+#### Developer Experience
+- **OpenAPI Validation**: Detailed error messages for spec issues
+- **Live Testing**: Test your MCP directly from the dashboard
+- **Claude Config Generator**: Copy-paste config for Claude Desktop
+- **Comprehensive Docs**: User guides, API reference, and troubleshooting
 
 ### Infrastructure
-- **Lovable Cloud Backend**: PostgreSQL database with Edge Functions (Deno runtime)
-- **React Frontend**: Modern React 18 with TypeScript and Tailwind CSS
-- **Edge Functions**: 25+ serverless functions for all backend operations
-- **Storage Buckets**: Secure file storage for large API specifications
+- **Edge Functions**: Fast, globally distributed backend
+- **Real-time Updates**: Live deployment status updates
+- **Hybrid Storage**: Handles API specs of any size
 
 ---
 
-## Known Issues
+## Known Limitations
 
-- **OAuth Refresh in Claude Desktop**: Some MCP clients may not automatically use refresh tokens. Workaround: Re-authorize when access token expires.
-- **Large OpenAPI Specs**: Specifications over 5MB may take longer to process.
-- **Some Gallery Items**: Certain gallery items may have incomplete OpenAPI specs and cannot be deployed.
+- Some MCP clients may require manual re-authorization when tokens expire
+- Very large OpenAPI specifications (5MB+) may take longer to process
+- Some gallery items may be temporarily unavailable
 
 ---
-
-## Version History Legend
-
-- **Added**: New features
-- **Changed**: Changes to existing functionality  
-- **Deprecated**: Features that will be removed in future versions
-- **Removed**: Features that have been removed
-- **Fixed**: Bug fixes
-- **Security**: Security improvements and vulnerability fixes
-- **Performance**: Performance improvements
 
 ## Support
 
-For questions about specific versions or upgrade assistance:
-- Review the [User Guide](./docs/user/USER_GUIDE.md)
-- Check the [Troubleshooting Guide](./docs/user/TROUBLESHOOTING.md)
-- Contact support through the dashboard
+For help or questions:
+- Read the [Documentation](https://docs.tydli.io)
+- Check [Troubleshooting](https://docs.tydli.io/troubleshooting)
+- Contact us through the dashboard
